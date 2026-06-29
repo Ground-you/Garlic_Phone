@@ -13,7 +13,7 @@
             
             <div class="w-full md:w-[45%] flex flex-col justify-between">
                 <div class="flex justify-start -mt-10 -ml-10 mb-12">
-                    <img src="/images/logo.png" alt="Garlic Phone Logo" class="w-44 h-44 object-contain drop-shadow-md hover:scale-105 transition-transform" />
+                    <img src="/images/logo.png" alt="Garlic Phone Logo" class="w-44 h-44 object-contain drop-shadow-md transition-transform" />
                 </div>
 
                 <div class="relative flex items-center w-full pl-6">
@@ -27,12 +27,27 @@
                         />
                     </div>
                     
-                    <div class="absolute left-0 w-24 h-24 rounded-full border-[4px] border-[#865bc6] bg-white overflow-hidden shadow-md flex items-center justify-center z-10 group cursor-pointer">
-                        <img src="/images/profile.png" alt="User Profile" class="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                    <div 
+                        @click="triggerFileInput"
+                        class="absolute left-0 w-24 h-24 rounded-full border-[4px] border-[#865bc6] bg-white overflow-hidden shadow-md flex items-center justify-center z-10 group cursor-pointer"
+                    >
+                        <img :src="profilePreview" alt="User Profile" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200" />
+                        
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                            <span class="text-white text-1xl bold">사진변경</span>
+                        </div>
                     </div>
+
+                    <input 
+                        ref="fileInput"
+                        type="file" 
+                        accept="image/*" 
+                        class="hidden" 
+                        @change="handleProfileChange"
+                    />
                 </div>
 
-                <div class="flex-1 bg-[#bfa2db] border-[4px] border-[#865bc6] rounded-3xl relative mt-10 pt-12 p-6 shadow-inner flex flex-col justify-center">
+                <div class="flex-1 bg-[#bfa2db] border-[4px] border-[#865bc6] rounded-3xl relative mt-10 pt-12 p-6 shadow-inner flex flex-col ">
                     <div class="absolute -top-4 left-6 bg-[#865bc6] text-white font-extrabold px-5 py-1.5 rounded-xl text-sm shadow-md">
                         플레이 방법
                     </div>
@@ -214,12 +229,28 @@ const nickname = ref(props.defaultNickname || '');
 const selectedMode = ref('normal');
 const activeTab = ref('mode');
 
+const fileInput = ref(null);
+const profilePreview = ref('/images/profile.png');
+const selectedFile = ref(null);
+
+const triggerFileInput = () => {
+    fileInput.value.click();
+};
+
+const handleProfileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        selectedFile.value = file;
+        profilePreview.value = URL.createObjectURL(file);
+    }
+};
+
 const isNicknameValid = computed(() => {
     return nickname.value && nickname.value.trim().length > 0;
 });
 
 const handleStartGame = () => {
     if (!isNicknameValid.value) return;
-    alert(`게임 시작! 닉네임: ${nickname.value}, 선택한 모드: ${selectedMode.value}`);
+    alert(`게임 시작! 닉네임: ${nickname.value}, 선택한 모드: ${selectedMode.value}\n사진 첨부 완료: ${selectedFile.value ? selectedFile.value.name : '기본 이미지 사용'}`);
 };
 </script>
