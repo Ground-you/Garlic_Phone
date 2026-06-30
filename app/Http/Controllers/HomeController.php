@@ -22,14 +22,14 @@ class HomeController extends Controller
                 [
                     'id' => '',
                     'title' => '추가 예정',
-                    'desc' => '처음 만난 사람들과 친해지는 모드',
+                    'desc' => '',
                     'image' => '',
                     'active' => false,
                 ],
                 [
                     'id' => '',
                     'title' => '추가 예정',
-                    'desc' => '점수가 낮으면 탈락합니다.',
+                    'desc' => '',
                     'image' => '',
                     'active' => false,
                 ],
