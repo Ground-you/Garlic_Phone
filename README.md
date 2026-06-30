@@ -84,3 +84,11 @@ npm run dev
 3. 독립된 공간에서 기능을 구현하고 의미 있는 단위로 커밋을 남깁니다.
 4. 개발이 끝나면 `develop`의 최신 변경 내용을 내 기능 브랜치에 merge하여 충돌(Conflict)을 먼저 해결합니다.
 5. 깃허브 웹(GitHub)에서 `develop` 브랜치를 대상으로 Pull Request를 생성하여 코드 검토 후 최종 통합합니다.
+
+---
+
+
+## 📋 기능 명세서 및 기술 명세서 (노션)
+https://app.notion.com/p/38fb3233fd7180f0aa7cc5c174cee59f?v=38fb3233fd7180168666000c6d619533&source=copy_link
+## 🎨 디자인 (피그마)
+https://www.figma.com/design/nGK7pyV7M6zoMU5RXJYVkk/%EC%A0%9C%EB%AA%A9-%EC%97%86%EC%9D%8C?node-id=0-1&t=IbiLVEVG18gEwK2l-1
