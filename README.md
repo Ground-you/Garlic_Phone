@@ -4,20 +4,18 @@
 
 ---
 
-## 🛠️ 기술 스택 (Tech Stack)
+### 🛠️ 기술 스택 및 버전 정보 (Tech Stack & Versions)
 
-### 🎨 Frontend
-* **Vue 3 (`<script setup>`)**: 컴포넌트 기반 반응형 프론트엔드 프레임워크
-* **HTML5 Canvas API**: 인게임 실시간 스케치북 패드 및 드로잉 로직 구현
-* **Tailwind CSS**: GPU 가속 애니메이션 및 유연한 UI 레이아웃 스타일링
-* **Laravel Echo**: 백엔드 웹소켓 신호를 실시간으로 수신하는 클라이언트 라이브러리
-
-### ⚙️ Backend & Infrastructure
-* **Laravel 13 (PHP)**: 세션 제어, 대기방 생성, 게임 라운드 로직을 총괄하는 메인 백엔드
-* **Inertia.js**: API 설계 없이 라라벨과 Vue 3 사이의 데이터와 라우팅을 긴밀하게 연결하는 다리 역할
-* **Laravel Reverb**: 라라벨 13 내장 고성능 **웹소켓(WebSocket) 서버**로, 실시간 채팅 및 그림 데이터 브로드캐스팅 담당
-* **PostgreSQL**: 방 정보, 참가자 세션, 라운드별 제시어 및 그림 경로 저장
-
+| 분류 | 기술 스택 | 버전 | 역할 및 요약 |
+| :--- | :--- | :--- | :--- |
+| **🎨 Frontend** | **Vue.js**  | `^3.4` | 컴포넌트 기반 반응형 프론트엔드 프레임워크 |
+| | **HTML5 Canvas API** | `Built-in` | 인게임 실시간 스케치북 패드 및 드로잉 로직 구현 |
+| | **Tailwind CSS** | `^3.2.1` | 유연한 UI 레이아웃 스타일링 |
+| | **Laravel Echo** | `^2.3.7` | 백엔드 웹소켓 신호를 실시간으로 수신하는 클라이언트 라이브러리 |
+| **⚙️ Backend** | **Laravel 13** (PHP `^8.3`) | `^13.0` | 세션 제어, 대기방 생성, 게임 라운드 로직 총괄 메인 백엔드 |
+| | **Inertia.js** | `^2.0` | API 설계 없이 라라벨-Vue 3 사이의 데이터/라우팅을 연결하는 다리 |
+| | **Laravel Reverb** | `^2.3.7` | 라라벨 내장 고성능 웹소켓 서버 (실시간 채팅 및 그림 브로드캐스팅) |
+| **🗄️ Database** | **PostgreSQL** | `^18.0` | 방 정보,참가자 정보, 참가자 세션, 라운드별 제시어 저장 |
 ---
 
 ## 🚀 셋업 방법 (Setup Guide)
@@ -26,7 +24,7 @@
 
 ### 1. 저장소 복제 및 폴더 이동
 ~~~bash
-git clone <본인의-깃허브-레포지토리-주소>.git
+git clone https://github.com/Ground-you/Garlic_Phone.git
 cd Garlic_Phone
 ~~~
 ### 2. 패키지 의존성 설치
