@@ -1,19 +1,21 @@
 <template>
     <Head title="홈 - Garlic Phone" />
 
-    <div class="min-h-screen bg-gradient-to-br from-[#caaae6] via-[#bfa2db] to-[#e4d4f7] bg-[length:400%_400%] animate-gradient-slow flex items-center justify-center p-6 relative overflow-hidden select-none">
+    <div class="min-h-screen bg-gradient-to-br from-[#caaae6] via-[#bfa2db] to-[#e4d4f7] flex items-center justify-center p-6 relative overflow-hidden select-none">
         
-        <div class="absolute inset-0 opacity-30 animate-move-bg" style="background-image: radial-gradient(#865bc6 2.4px, transparent 1.8px); background-size: 28px 28px;"></div>
+        <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#865bc6 2.4px, transparent 1.8px); background-size: 28px 28px;"></div>
 
-        <div class="absolute w-72 h-72 bg-white/10 rounded-full blur-2xl top-[-10%] left-[-5%] animate-float-slow"></div>
-        <div class="absolute w-96 h-96 bg-pink-300/10 rounded-full blur-3xl bottom-[-10%] right-[-5%] animate-float-delayed"></div>
-        <div class="absolute w-48 h-48 bg-purple-400/10 rounded-full blur-xl top-[60%] left-[80%] animate-float-slow"></div>
+        <div class="absolute w-72 h-72 bg-white/10 rounded-full blur-md top-[-10%] left-[-5%]"></div>
+        <div class="absolute w-96 h-96 bg-pink-300/10 rounded-full blur-md bottom-[-10%] right-[-5%]"></div>
 
-        <div class="w-full max-w-7xl min-h-[650px] bg-[#dfcef2]/95 backdrop-blur-sm border-[4px] border-[#e953a8] rounded-3xl p-10 shadow-2xl relative z-10 flex flex-col md:flex-row gap-12 justify-between items-stretch transition-all duration-500">
+        <div 
+            class="w-full max-w-7xl min-h-[650px] bg-[#dfcef2]/95 border-[4px] border-[#e953a8] rounded-3xl p-10 shadow-2xl relative z-10 flex flex-col md:flex-row gap-12 justify-between items-stretch transition-all duration-300 ease-out animate-pop-in"
+            :class="{ 'scale-[0.98] opacity-60 pointer-events-none': isModalOpen }"
+        >
             
             <div class="w-full md:w-[45%] flex flex-col justify-between">
                 <div class="flex justify-start -mt-10 -ml-10 mb-12">
-                    <img src="/images/logo.png" alt="Garlic Phone Logo" class="w-44 h-44 object-contain drop-shadow-md transition-transform" />
+                    <img src="/images/logo.png" alt="Garlic Phone Logo" class="w-44 h-44 object-contain drop-shadow-md hover:scale-105 hover:rotate-1 transition-transform duration-200" />
                 </div>
 
                 <div class="relative flex items-center w-full pl-6">
@@ -29,22 +31,15 @@
                     
                     <div 
                         @click="triggerFileInput"
-                        class="absolute left-0 w-24 h-24 rounded-full border-[4px] border-[#865bc6] bg-white overflow-hidden shadow-md flex items-center justify-center z-10 group cursor-pointer"
+                        class="absolute left-0 w-24 h-24 rounded-full border-[4px] border-[#865bc6] bg-white overflow-hidden shadow-md flex items-center justify-center z-10 group cursor-pointer active:scale-95 transition-transform duration-150"
                     >
                         <img :src="profilePreview" alt="User Profile" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200" />
-                        
                         <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                            <span class="text-white text-1xl bold">사진변경</span>
+                            <span class="text-white text-1xl">사진 변경</span>
                         </div>
                     </div>
 
-                    <input 
-                        ref="fileInput"
-                        type="file" 
-                        accept="image/*" 
-                        class="hidden" 
-                        @change="handleProfileChange"
-                    />
+                    <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleProfileChange" />
                 </div>
 
                 <div class="flex-1 bg-[#bfa2db] border-[4px] border-[#865bc6] rounded-3xl relative mt-10 pt-12 p-6 shadow-inner flex flex-col ">
@@ -61,27 +56,17 @@
 
             <div class="w-full md:w-[50%] flex flex-col justify-between pt-6">
                 <div class="flex flex-col w-full">
-                    
                     <div class="flex gap-1 pl-4 relative z-20">
                         <button 
                             @click="activeTab = 'mode'"
-                            :class="[
-                                activeTab === 'mode' 
-                                    ? 'bg-[#bfa2db] border-[#865bc6] text-white border-b-transparent' 
-                                    : 'bg-[#dfcef2] border-[#865bc6] text-[#865bc6] border-b-[#865bc6] hover:bg-purple-100'
-                            ]"
+                            :class="[activeTab === 'mode' ? 'bg-[#bfa2db] border-[#865bc6] text-white border-b-transparent' : 'bg-[#dfcef2] border-[#865bc6] text-[#865bc6] border-b-[#865bc6] hover:bg-purple-100']"
                             class="border-[4px] px-8 py-2.5 rounded-t-2xl font-black text-base transition-all relative top-[4px] z-30 transform active:scale-95"
                         >
                             모드
                         </button>
-
                         <button 
                             @click="activeTab = 'setting'"
-                            :class="[
-                                activeTab === 'setting' 
-                                    ? 'bg-[#bfa2db] border-[#865bc6] text-white border-b-transparent' 
-                                    : 'bg-[#dfcef2] border-[#865bc6] text-[#865bc6] border-b-[#865bc6] hover:bg-purple-100'
-                            ]"
+                            :class="[activeTab === 'setting' ? 'bg-[#bfa2db] border-[#865bc6] text-white border-b-transparent' : 'bg-[#dfcef2] border-[#865bc6] text-[#865bc6] border-b-[#865bc6] hover:bg-purple-100']"
                             class="border-[4px] px-8 py-2.5 rounded-t-2xl font-black text-base transition-all relative top-[4px] z-30 transform active:scale-95"
                         >
                             설정
@@ -89,7 +74,6 @@
                     </div>
 
                     <div class="custom-scroll bg-[#bfa2db] border-[4px] border-[#865bc6] rounded-3xl p-6 shadow-inner w-full h-[520px] min-h-[520px] overflow-y-auto relative z-10 flex flex-col">
-                        
                         <Transition name="fade" mode="out-in">
                             <div v-if="activeTab === 'mode'" key="mode" class="space-y-4 w-full flex flex-col">
                                 <div 
@@ -110,115 +94,58 @@
                                             <span class="font-black text-2xl text-gray-700">{{ mode.title }}</span>
                                         </div>
                                     </div>
-                                    <div v-if="selectedMode === mode.id && mode.active" class="w-6 h-6 bg-[#e953a8] rounded-full animate-ping-once"></div>
+                                    <div v-if="selectedMode === mode.id && mode.active" class="w-6 h-6 bg-[#e953a8] rounded-full animate-pulse"></div>
                                 </div>
                             </div>
-
                             <div v-else key="setting" class="flex-1 w-full flex items-center justify-center text-center text-white font-black text-2xl px-4">
                                 사운드 및 시스템 설정이 추가될 예정입니다.
                             </div>
                         </Transition>
-                        
                     </div>
                 </div>
 
                 <button 
-                    @click="handleStartGame"
+                    @click="isModalOpen = true"
                     :disabled="!isNicknameValid"
-                    :class="[
-                        isNicknameValid 
-                            ? 'bg-[#bfa2db] hover:bg-[#b090cf] border-[#865bc6] hover:border-[#734dae] text-[#55328a] cursor-pointer transform active:scale-[0.98]' 
-                            : 'bg-purple-300/50 border-purple-400 text-purple-400 opacity-60 cursor-not-allowed'
-                    ]"
+                    :class="[isNicknameValid ? 'bg-[#bfa2db] hover:bg-[#b090cf] border-[#865bc6] hover:border-[#734dae] text-[#55328a] cursor-pointer transform active:scale-[0.98]' : 'bg-purple-300/50 border-purple-400 text-purple-400 opacity-60 cursor-not-allowed']"
                     class="w-full mt-6 border-[4px] font-black text-3xl py-5 rounded-2xl shadow-md transition-all duration-200"
                 >
                     방 생성
                 </button>
             </div>
-
         </div>
+
+        <LobbySetting 
+            v-if="isModalOpen"
+            :isOpen="isModalOpen" 
+            @close="isModalOpen = false" 
+            @confirm="handleCreateRoom" 
+        />
+
     </div>
 </template>
 
 <style scoped>
-@keyframes gradientBg {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+@keyframes popIn {
+    0% { transform: scale(0.97); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
 }
+.animate-pop-in { animation: popIn 0.35s ease-out; }
 
-@keyframes moveBg {
-    0% { background-position: 0px 0px; }
-    100% { background-position: 56px 56px; }
-}
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease, transform 0.2s ease; }
+.fade-enter-from { opacity: 0; transform: translateY(4px); }
+.fade-leave-to { opacity: 0; transform: translateY(-4px); }
 
-@keyframes float {
-    0% { transform: translateY(0px) rotate(0deg); }
-    50% { transform: translateY(-25px) rotate(5deg); }
-    100% { transform: translateY(0px) rotate(0deg); }
-}
-
-@keyframes floatDelayed {
-    0% { transform: translateY(0px) rotate(0deg); }
-    50% { transform: translateY(30px) rotate(-5deg); }
-    100% { transform: translateY(0px) rotate(0deg); }
-}
-
-@keyframes bounceSlow {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
-}
-
-.animate-gradient-slow {
-    animation: gradientBg 18s ease infinite;
-}
-.animate-move-bg {
-    animation: moveBg 5s linear infinite;
-}
-.animate-float-slow {
-    animation: float 8s ease-in-out infinite;
-}
-.animate-float-delayed {
-    animation: floatDelayed 10s ease-in-out infinite;
-}
-.animate-bounce-slow {
-    animation: bounceSlow 3s ease-in-out infinite;
-}
-.animate-ping-once {
-    animation: ping 0.5s cubic-bezier(0, 0, 0.2, 1) 1;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-    transition: opacity 0.2s ease, transform 0.2s ease;
-}
-.fade-enter-from {
-    opacity: 0;
-    transform: translateY(4px);
-}
-.fade-leave-to {
-    opacity: 0;
-    transform: translateY(-4px);
-}
-
-.custom-scroll::-webkit-scrollbar {
-    width: 8px;
-}
-.custom-scroll::-webkit-scrollbar-track {
-    background: transparent;
-}
-.custom-scroll::-webkit-scrollbar-thumb {
-    background-color: #865bc6;
-    border-radius: 9999px;
-}
-input::placeholder {
-    color: rgba(255, 255, 255, 0.6);
-}
+.custom-scroll::-webkit-scrollbar { width: 8px; }
+.custom-scroll::-webkit-scrollbar-track { background: transparent; }
+.custom-scroll::-webkit-scrollbar-thumb { background-color: #865bc6; border-radius: 9999px; }
+input::placeholder { color: rgba(255, 255, 255, 0.6); }
 </style>
 
 <script setup>
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
+import LobbySetting from './lobbySetting.vue';
 
 const props = defineProps({
     defaultNickname: String,
@@ -233,10 +160,9 @@ const fileInput = ref(null);
 const profilePreview = ref('/images/profile.png');
 const selectedFile = ref(null);
 
-const triggerFileInput = () => {
-    fileInput.value.click();
-};
+const isModalOpen = ref(false);
 
+const triggerFileInput = () => { fileInput.value.click(); };
 const handleProfileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -249,8 +175,8 @@ const isNicknameValid = computed(() => {
     return nickname.value && nickname.value.trim().length > 0;
 });
 
-const handleStartGame = () => {
-    if (!isNicknameValid.value) return;
-    alert(`게임 시작! 닉네임: ${nickname.value}, 선택한 모드: ${selectedMode.value}\n사진 첨부 완료: ${selectedFile.value ? selectedFile.value.name : '기본 이미지 사용'}`);
+const handleCreateRoom = (settings) => {
+    isModalOpen.value = false;
+    alert(`방 생성 완료!\n닉네임: ${nickname.value}\n모드: ${selectedMode.value}\n인원: ${settings.players}명\n제한시간: ${settings.timeLimit}초`);
 };
 </script>
