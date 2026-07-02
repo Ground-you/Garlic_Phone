@@ -7,46 +7,43 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Facades\Log;
 
 class DiscordController extends Controller
 {
-    /**
-     * 1. 사용자를 디스코드 인증 페이지로 리다이렉트
-     */
     public function redirectToDiscord(): RedirectResponse
     {
         return Socialite::driver('discord')
+            ->stateless()
             ->scopes(['identify', 'email'])
             ->redirect();
     }
 
-    /**
-     * 2. 디스코드 인증 완료 후 데이터 처리 및 세션 로그인
-     */
     public function handleDiscordCallback(): RedirectResponse
     {
         try {
-            // 디스코드로부터 유저 객체 수신
-            $discordUser = Socialite::driver('discord')->user();
+            $discordUser = Socialite::driver('discord')->stateless()->user();
 
-            // DB에 기존 디스코드 ID가 있는지 확인 후 업데이트 또는 새로 생성
+            // 디스코드 ID를 기준으로 정보를 찾거나 생성/업데이트
             $user = User::updateOrCreate(
                 ['discord_id' => $discordUser->getId()],
                 [
-                    'name' => $discordUser->getName(), // 디스코드 닉네임 반영
-                    'avatar_url' => $discordUser->getAvatar(), // 디스코드 프로필 이미지 주소 반영
-                    'session_id' => null, // 게스트 유저가 아니므로 null 처리
+                    'name' => $discordUser->getName(),
+                    'email' => $discordUser->getEmail(),
+                    'avatar_url' => $discordUser->getAvatar(),
+                    'session_id' => null, 
                 ]
             );
 
-            // 라라벨 Auth 시스템을 이용해 이 유저로 세션 로그인 처리
+          
             Auth::login($user, true);
+            request()->session()->regenerate();
 
-            // 로그인이 성공하면 메인 홈 화면으로 리다이렉트
-            return redirect()->route('home');
+            return redirect()->to('http://127.0.0.1:8000');
 
         } catch (\Exception $e) {
-            return redirect()->route('home')->with('error', '디스코드 연동 중 오류가 발생했습니다.');
+            Log::error('디스코드 로그인 실패: ' . $e->getMessage());
+            return redirect()->to('http://127.0.0.1:8000')->with('error', '인증 실패');
         }
     }
 }
