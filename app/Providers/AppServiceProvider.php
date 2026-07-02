@@ -2,24 +2,22 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Event; // 👈 상단에 필수 포함
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        Vite::prefetch(concurrency: 3);
+        // 💡 SocialiteWasCalled 이벤트를 감지하여 디스코드 드라이버를 강제로 확장 주입
+        Event::listen(
+            \SocialiteProviders\Manager\SocialiteWasCalled::class,
+            \SocialiteProviders\Discord\DiscordExtendSocialite::class
+        );
     }
 }

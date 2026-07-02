@@ -6,25 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->rememberToken();
+            $table->id(); 
+            $table->string('discord_id')->nullable()->unique(); // 디스코드 고유 ID
+            $table->string('name'); // 디스코드 닉네임 또는 게스트 입력 닉네임
+            $table->string('email')->nullable(); // 💡 명세서에 표시할 디스코드 이메일 주소 추가
+            $table->string('avatar_url')->nullable(); // 디스코드 프로필 이미지 주소
+            $table->string('status_message')->nullable(); // 나의 한마디
+            $table->string('session_id')->nullable()->index(); // 게스트 구분용 세션 ID
             $table->timestamps();
-        });
-
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
-            $table->string('token');
-            $table->timestamp('created_at')->nullable();
         });
 
         Schema::create('sessions', function (Blueprint $table) {
@@ -37,13 +29,9 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
     }
 };
