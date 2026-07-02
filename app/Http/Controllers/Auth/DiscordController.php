@@ -23,27 +23,31 @@ class DiscordController extends Controller
     {
         try {
             $discordUser = Socialite::driver('discord')->stateless()->user();
-
-            // 디스코드 ID를 기준으로 정보를 찾거나 생성/업데이트
-            $user = User::updateOrCreate(
-                ['discord_id' => $discordUser->getId()],
-                [
-                    'name' => $discordUser->getName(),
-                    'email' => $discordUser->getEmail(),
-                    'avatar_url' => $discordUser->getAvatar(),
-                    'session_id' => null, 
-                ]
-            );
-
-          
+    
+            $avatarHash = $discordUser->user['avatar'] ?? null;
+            $userId = $discordUser->getId();
+    
+            $avatarUrl = $avatarHash
+                ? "https://cdn.discordapp.com/avatars/{$userId}/{$avatarHash}.png?size=256"
+                : "https://cdn.discordapp.com/embed/avatars/" . ($discordUser->user['discriminator'] % 5) . ".png";
+    
+            $user = User::updateOrCreate([
+                'discord_id' => $discordUser->getId(),
+            ], [
+                'name'          => $discordUser->getName(),
+                'email'         => $discordUser->getEmail(),
+                'avatar_url'    => $avatarUrl, // ← 직접 조립한 URL
+                'discriminator' => $discordUser->user['discriminator'] ?? '0',
+            ]);
+    
             Auth::login($user, true);
             request()->session()->regenerate();
-
-            return redirect()->to('http://127.0.0.1:8000');
-
+    
+            return redirect()->to('/');
+    
         } catch (\Exception $e) {
             Log::error('디스코드 로그인 실패: ' . $e->getMessage());
-            return redirect()->to('http://127.0.0.1:8000')->with('error', '인증 실패');
+            return redirect()->to('/')->with('error', '인증 실패');
         }
     }
 }

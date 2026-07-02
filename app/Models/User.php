@@ -17,6 +17,7 @@ class User extends Authenticatable
         'avatar_url',
         'status_message',
         'session_id',
+        'discriminator',
     ];
 
     protected $hidden = [];
