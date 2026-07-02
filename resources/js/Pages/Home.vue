@@ -18,7 +18,7 @@
                     <img src="/images/logo.png" alt="Garlic Phone Logo" class="w-44 h-44 object-contain drop-shadow-md hover:scale-105 hover:rotate-1 transition-transform duration-200" />
                 </div>
 
-                <div class="relative flex items-center w-full pl-6">
+                <div class="relative flex items-center w-full pl-6" v-click-outside="() => isProfileCardOpen = false">
                     <div class="w-full bg-[#bfa2db] border-[4px] border-[#865bc6] rounded-2xl p-1.5 shadow-sm">
                         <input 
                             v-model="nickname"
@@ -31,16 +31,28 @@
                     </div>
                     
                     <div 
-                        @click="!auth.user ? triggerFileInput() : null"
+                        @click="isProfileCardOpen = !isProfileCardOpen"
                         class="absolute left-0 w-24 h-24 rounded-full border-[4px] border-[#865bc6] bg-white overflow-hidden shadow-md flex items-center justify-center z-10 group cursor-pointer active:scale-95 transition-transform duration-150"
                     >
                         <img :src="auth.user ? profilePreview : profilePreview" alt="User Profile" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200" />
                         <div v-if="!auth.user" class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                            <span class="text-white text-1xl">사진 변경</span>
+                            <span class="text-white text-1xl">프로필 설정</span>
                         </div>
                     </div>
 
                     <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleProfileChange" />
+
+                    <ProfileCard
+                        :isOpen="isProfileCardOpen"
+                        :nickname="nickname"
+                        :statusMessage="statusMessage"
+                        :avatarUrl="profilePreview"
+                        :isLoggedIn="!!auth.user"
+                        @close="isProfileCardOpen = false"
+                        @update:nickname="nickname = $event"
+                        @update:statusMessage="statusMessage = $event"
+                        @update:avatarUrl="profilePreview = $event"
+                    />
                 </div>
 
                 <div class="flex-1 bg-[#bfa2db] border-[4px] border-[#865bc6] rounded-3xl relative mt-10 pt-12 p-6 shadow-inner flex flex-col ">
@@ -210,6 +222,7 @@ input::placeholder { color: rgba(255, 255, 255, 0.6); }
 import { ref, computed, watch, onMounted } from 'vue';
 import { Head, usePage, router } from '@inertiajs/vue3';
 import LobbySetting from './lobbySetting.vue';
+import ProfileCard from './ProfileCard.vue'; // ✅ 추가
 
 const props = defineProps({
     defaultNickname: String,
@@ -217,7 +230,6 @@ const props = defineProps({
 });
 
 const page = usePage();
-
 
 const auth = computed(() => page.props?.auth || { user: null });
 
@@ -230,9 +242,10 @@ const profilePreview = ref('/images/profile.png');
 const selectedFile = ref(null);
 
 const isModalOpen = ref(false);
+const isProfileCardOpen = ref(false); // ✅ 추가
+const statusMessage = ref('');        // ✅ 추가
 
 const syncAuthUser = () => {
-    // 💡 디버깅용 로그: 브라우저 F12 개발자 도구 콘솔에서 실시간 확인 가능
     if (auth.value && auth.value.user) {
         console.log("============== 디스코드 데이터 주입 확인 ==============");
         console.log("유저 객체:", auth.value.user);
@@ -242,10 +255,8 @@ const syncAuthUser = () => {
     }
 
     if (auth.value && auth.value.user) {
-        // 1. 닉네임 동기화
         nickname.value = auth.value.user.name || '';
         
-        // 2. 프로필 이미지 동기화 
         const userAvatar = auth.value.user.avatar_url;
         if (userAvatar) {
             profilePreview.value = userAvatar;
@@ -262,7 +273,6 @@ onMounted(() => {
     syncAuthUser();
 });
 
-// 💡 auth 가로채기 객체 전체를 deep 감시하여 상태가 동적으로 변경될 때 반응성 무조건 확보
 watch(auth, () => {
     syncAuthUser();
 }, { deep: true, immediate: true });
@@ -299,6 +309,4 @@ const handleLogout = () => {
         router.post('/logout');
     }
 };
-
-
 </script>
