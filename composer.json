@@ -11,7 +11,9 @@
         "laravel/framework": "^13.8",
         "laravel/reverb": "^1.0",
         "laravel/sanctum": "^4.0",
+        "laravel/socialite": "^5.28",
         "laravel/tinker": "^3.0",
+        "socialiteproviders/discord": "^4.2",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {
