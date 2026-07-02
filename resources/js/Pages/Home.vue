@@ -24,17 +24,18 @@
                             v-model="nickname"
                             type="text" 
                             class="w-full bg-transparent border-none text-white font-black text-center text-xl focus:outline-none placeholder-purple-200 pl-20 pr-4 py-2"
-                            placeholder="닉네임 입력..."
+                            :placeholder="auth.user ? auth.user.name : '닉네임 입력...'"
                             maxLength="12"
+                            :disabled="auth.user !== null"
                         />
                     </div>
                     
                     <div 
-                        @click="triggerFileInput"
+                        @click="!auth.user ? triggerFileInput() : null"
                         class="absolute left-0 w-24 h-24 rounded-full border-[4px] border-[#865bc6] bg-white overflow-hidden shadow-md flex items-center justify-center z-10 group cursor-pointer active:scale-95 transition-transform duration-150"
                     >
-                        <img :src="profilePreview" alt="User Profile" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200" />
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                        <img :src="auth.user ? auth.user.avatar_url : profilePreview" alt="User Profile" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200" />
+                        <div v-if="!auth.user" class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
                             <span class="text-white text-1xl">사진 변경</span>
                         </div>
                     </div>
@@ -71,6 +72,13 @@
                         >
                             설정
                         </button>
+                        <button 
+                            @click="activeTab = 'account'"
+                            :class="[activeTab === 'account' ? 'bg-[#bfa2db] border-[#865bc6] text-white border-b-transparent' : 'bg-[#dfcef2] border-[#865bc6] text-[#865bc6] border-b-[#865bc6] hover:bg-purple-100']"
+                            class="border-[4px] px-8 py-2.5 rounded-t-2xl font-black text-base transition-all relative top-[4px] z-30 transform active:scale-95"
+                        >
+                            계정
+                        </button>
                     </div>
 
                     <div class="custom-scroll bg-[#bfa2db] border-[4px] border-[#865bc6] rounded-3xl p-6 shadow-inner w-full h-[520px] min-h-[520px] overflow-y-auto relative z-10 flex flex-col">
@@ -97,21 +105,50 @@
                                     <div v-if="selectedMode === mode.id && mode.active" class="w-6 h-6 bg-[#e953a8] rounded-full animate-pulse"></div>
                                 </div>
                             </div>
-                            <div v-else key="setting" class="flex-1 w-full flex items-center justify-center text-center text-white font-black text-2xl px-4">
+                            
+                            <div v-else-if="activeTab === 'setting'" key="setting" class="flex-1 w-full flex items-center justify-center text-center text-white font-black text-2xl px-4">
                                 사운드 및 시스템 설정이 추가될 예정입니다.
+                            </div>
+
+                            <div v-else-if="activeTab === 'account'" key="account" class="flex-1 w-full flex flex-col items-center justify-center p-4">
+                                <div class="w-full max-w-md flex flex-col items-center select-none">
+                                    
+                                    <div class="flex items-center justify-center gap-3 w-full max-w-[340px] bg-[#5865F2] py-4 rounded-2xl shadow-md border border-white/10 mb-6">
+                                        <img src="/images/discord-icon.png" alt="Discord Logo" class="w-10 h-10 object-contain" />
+                                        <span class="text-white font-black text-3xl tracking-wide uppercase">Discord</span>
+                                    </div>
+
+                                    <button 
+                                        @click="redirectToDiscordOAuth"
+                                        class="w-full max-w-[340px] bg-[#6c527a] hover:bg-[#5b4368] border-b-4 border-[#4a3455] text-white font-black text-2xl py-4 rounded-2xl shadow-lg transition-all duration-150 transform active:scale-[0.98] tracking-wide"
+                                    >
+                                        계정 연동하기
+                                    </button>
+
+                                </div>
                             </div>
                         </Transition>
                     </div>
                 </div>
 
-                <button 
-                    @click="isModalOpen = true"
-                    :disabled="!isNicknameValid"
-                    :class="[isNicknameValid ? 'bg-[#bfa2db] hover:bg-[#b090cf] border-[#865bc6] hover:border-[#734dae] text-[#55328a] cursor-pointer transform active:scale-[0.98]' : 'bg-purple-300/50 border-purple-400 text-purple-400 opacity-60 cursor-not-allowed']"
-                    class="w-full mt-6 border-[4px] font-black text-3xl py-5 rounded-2xl shadow-md transition-all duration-200"
-                >
-                    방 생성
-                </button>
+                <div class="flex gap-4 w-full mt-6">
+                    <button 
+                        @click="handleJoinRoom"
+                        :disabled="!isNicknameValid"
+                        :class="[isNicknameValid ? 'bg-[#bfa2db] hover:bg-[#b090cf] border-[#865bc6] text-[#55328a] cursor-pointer active:scale-[0.98]' : 'bg-purple-300/50 border-purple-400 text-purple-400 opacity-60 cursor-not-allowed']"
+                        class="flex-1 border-[4px] font-black text-2xl py-4 rounded-2xl shadow-md transition-all duration-200"
+                    >
+                        방 입장
+                    </button>
+                    <button 
+                        @click="isModalOpen = true"
+                        :disabled="!isNicknameValid"
+                        :class="[isNicknameValid ? 'bg-[#bfa2db] hover:bg-[#b090cf] border-[#865bc6] text-[#55328a] cursor-pointer active:scale-[0.98]' : 'bg-purple-300/50 border-purple-400 text-purple-400 opacity-60 cursor-not-allowed']"
+                        class="flex-1 border-[4px] font-black text-2xl py-4 rounded-2xl shadow-md transition-all duration-200"
+                    >
+                        방 생성
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -143,14 +180,18 @@ input::placeholder { color: rgba(255, 255, 255, 0.6); }
 </style>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { Head } from '@inertiajs/vue3';
+import { ref, computed, watch, onMounted } from 'vue';
+import { Head, usePage } from '@inertiajs/vue3';
 import LobbySetting from './lobbySetting.vue';
 
 const props = defineProps({
     defaultNickname: String,
     modes: Array
 });
+
+// Inertia 공유 속성에서 auth 정보 가로채기
+const page = usePage();
+const auth = computed(() => page.props.auth || { user: null });
 
 const nickname = ref(props.defaultNickname || '');
 const selectedMode = ref('normal');
@@ -161,6 +202,24 @@ const profilePreview = ref('/images/profile.png');
 const selectedFile = ref(null);
 
 const isModalOpen = ref(false);
+
+// 컴포넌트 마운트 시 또는 auth 상태 변경 시 닉네임과 프필 바인딩 처리
+const syncAuthUser = () => {
+    if (auth.value.user) {
+        nickname.value = auth.value.user.name;
+        if (auth.value.user.avatar_url) {
+            profilePreview.value = auth.value.user.avatar_url;
+        }
+    }
+};
+
+onMounted(() => {
+    syncAuthUser();
+});
+
+watch(() => auth.value.user, () => {
+    syncAuthUser();
+}, { deep: true });
 
 const triggerFileInput = () => { fileInput.value.click(); };
 const handleProfileChange = (event) => {
@@ -175,8 +234,18 @@ const isNicknameValid = computed(() => {
     return nickname.value && nickname.value.trim().length > 0;
 });
 
+const handleJoinRoom = () => {
+    const roomCode = prompt("입장할 코드를 입력하세요:");
+    if(roomCode) alert(`방 코드 [${roomCode}]로 이동합니다.`);
+};
+
 const handleCreateRoom = (settings) => {
     isModalOpen.value = false;
     alert(`방 생성 완료!\n닉네임: ${nickname.value}\n모드: ${selectedMode.value}\n인원: ${settings.players}명\n제한시간: ${settings.timeLimit}초`);
+};
+
+// 라라벨 소셜라이트 엔드포인트 트리거 함수
+const redirectToDiscordOAuth = () => {
+    window.location.href = '/auth/discord/redirect';
 };
 </script>
