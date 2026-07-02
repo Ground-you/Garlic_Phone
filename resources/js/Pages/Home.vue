@@ -217,7 +217,9 @@ const props = defineProps({
 });
 
 const page = usePage();
-const auth = computed(() => page.props.auth || { user: null });
+
+
+const auth = computed(() => page.props?.auth || { user: null });
 
 const nickname = ref(props.defaultNickname || '');
 const selectedMode = ref('normal');
@@ -230,18 +232,21 @@ const selectedFile = ref(null);
 const isModalOpen = ref(false);
 
 const syncAuthUser = () => {
-    // 💡 콘솔에서 백엔드가 보내주는 실제 데이터 구조를 확인하기 위한 디버깅 코드
+    // 💡 디버깅용 로그: 브라우저 F12 개발자 도구 콘솔에서 실시간 확인 가능
     if (auth.value && auth.value.user) {
-        console.log("============== 디스코드 유저 데이터 확인 ==============");
-        console.log(auth.value.user); 
+        console.log("============== 디스코드 데이터 주입 확인 ==============");
+        console.log("유저 객체:", auth.value.user);
+        console.log("아바타 URL:", auth.value.user.avatar_url);
+        console.log("태그(Discriminator):", auth.value.user.discriminator);
         console.log("====================================================");
     }
 
     if (auth.value && auth.value.user) {
+        // 1. 닉네임 동기화
         nickname.value = auth.value.user.name || '';
         
-        // 백엔드 필드명 매핑 방어 코드
-        const userAvatar = auth.value.user.avatar_url || auth.value.user.avatar || auth.value.user.profile_photo_path;
+        // 2. 프로필 이미지 동기화 
+        const userAvatar = auth.value.user.avatar_url;
         if (userAvatar) {
             profilePreview.value = userAvatar;
         } else {
