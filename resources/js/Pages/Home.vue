@@ -34,7 +34,7 @@
                         @click="!auth.user ? triggerFileInput() : null"
                         class="absolute left-0 w-24 h-24 rounded-full border-[4px] border-[#865bc6] bg-white overflow-hidden shadow-md flex items-center justify-center z-10 group cursor-pointer active:scale-95 transition-transform duration-150"
                     >
-                        <img :src="auth.user ? auth.user.avatar_url : profilePreview" alt="User Profile" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200" />
+                        <img :src="auth.user ? profilePreview : profilePreview" alt="User Profile" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200" />
                         <div v-if="!auth.user" class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
                             <span class="text-white text-1xl">사진 변경</span>
                         </div>
@@ -113,17 +113,44 @@
                             <div v-else-if="activeTab === 'account'" key="account" class="flex-1 w-full flex flex-col items-center justify-center p-4">
                                 <div class="w-full max-w-md flex flex-col items-center select-none">
                                     
-                                    <div class="flex items-center justify-center gap-3 w-full max-w-[340px] bg-[#5865F2] py-4 rounded-2xl shadow-md border border-white/10 mb-6">
-                                        <img src="/images/discord-icon.png" alt="Discord Logo" class="w-10 h-10 object-contain" />
-                                        <span class="text-white font-black text-3xl tracking-wide uppercase">Discord</span>
+                                    <div class="flex items-center justify-center w-full max-w-[340px] h-35 mb-1 mr-5">
+                                        <img src="/images/discord_logo_full.png" alt="Discord Full Logo" class="h-full w-auto object-contain" />
                                     </div>
 
-                                    <button 
-                                        @click="redirectToDiscordOAuth"
-                                        class="w-full max-w-[340px] bg-[#6c527a] hover:bg-[#5b4368] border-b-4 border-[#4a3455] text-white font-black text-2xl py-4 rounded-2xl shadow-lg transition-all duration-150 transform active:scale-[0.98] tracking-wide"
-                                    >
-                                        계정 연동하기
-                                    </button>
+                                    <div v-if="!auth.user" class="w-full flex flex-col items-center">
+                                        <p class="text-center text-[#55328a] font-bold text-xl mb-6 leading-relaxed">
+                                            디스코드 계정을 연동하여<br>
+                                            게임을 더욱 즐겨보세요!
+                                        </p>
+                                        <button 
+                                            @click="redirectToDiscordOAuth"
+                                            class="w-full max-w-[340px] bg-[#6c527a] hover:bg-[#5b4368] border-b-4 border-[#4a3455] text-white font-black text-2xl py-4 rounded-2xl shadow-lg transition-all duration-150 transform active:scale-[0.98] tracking-wide"
+                                        >
+                                            계정 연동하기
+                                        </button>
+                                    </div>
+
+                                    <div v-else class="w-full flex flex-col items-center">
+                                        <div class="w-full max-w-[360px] text-center space-y-8 mb-10 pt-2">
+                                            <div class="flex flex-col items-center">
+                                                <span class="text-black font-black text-[27px] mb-2">연동된 계정:</span>
+                                                <span class="text-black font-black text-[25px] tracking-normal break-all leading-tight">{{ auth.user.email || '연동 완료' }}</span>
+                                            </div>
+                                            <div class="flex flex-col items-center">
+                                                <span class="text-black font-black text-[27px] mb-2">계정 아이디:</span>
+                                                <span class="text-black font-black text-[30px] leading-none">
+                                                    {{ auth.user.name }}{{ auth.user.discriminator && auth.user.discriminator !== '0' ? `#${auth.user.discriminator}` : '' }}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <button 
+                                            @click="handleLogout"
+                                            class="w-full max-w-[320px] bg-[#685370] hover:bg-[#584460] border-b-4 border-[#4a3850] text-white font-black text-3xl py-4 rounded-2xl shadow-lg transition-all duration-150 transform active:scale-[0.98] tracking-wider"
+                                        >
+                                            로그아웃
+                                        </button>
+                                    </div>
 
                                 </div>
                             </div>
@@ -181,7 +208,7 @@ input::placeholder { color: rgba(255, 255, 255, 0.6); }
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, usePage, router } from '@inertiajs/vue3';
 import LobbySetting from './lobbySetting.vue';
 
 const props = defineProps({
@@ -189,7 +216,6 @@ const props = defineProps({
     modes: Array
 });
 
-// Inertia 공유 속성에서 auth 정보 가로채기
 const page = usePage();
 const auth = computed(() => page.props.auth || { user: null });
 
@@ -203,13 +229,27 @@ const selectedFile = ref(null);
 
 const isModalOpen = ref(false);
 
-// 컴포넌트 마운트 시 또는 auth 상태 변경 시 닉네임과 프필 바인딩 처리
 const syncAuthUser = () => {
-    if (auth.value.user) {
-        nickname.value = auth.value.user.name;
-        if (auth.value.user.avatar_url) {
-            profilePreview.value = auth.value.user.avatar_url;
+    // 💡 콘솔에서 백엔드가 보내주는 실제 데이터 구조를 확인하기 위한 디버깅 코드
+    if (auth.value && auth.value.user) {
+        console.log("============== 디스코드 유저 데이터 확인 ==============");
+        console.log(auth.value.user); 
+        console.log("====================================================");
+    }
+
+    if (auth.value && auth.value.user) {
+        nickname.value = auth.value.user.name || '';
+        
+        // 백엔드 필드명 매핑 방어 코드
+        const userAvatar = auth.value.user.avatar_url || auth.value.user.avatar || auth.value.user.profile_photo_path;
+        if (userAvatar) {
+            profilePreview.value = userAvatar;
+        } else {
+            profilePreview.value = '/images/profile.png';
         }
+    } else {
+        nickname.value = props.defaultNickname || '';
+        profilePreview.value = '/images/profile.png';
     }
 };
 
@@ -217,9 +257,10 @@ onMounted(() => {
     syncAuthUser();
 });
 
-watch(() => auth.value.user, () => {
+// 💡 auth 가로채기 객체 전체를 deep 감시하여 상태가 동적으로 변경될 때 반응성 무조건 확보
+watch(auth, () => {
     syncAuthUser();
-}, { deep: true });
+}, { deep: true, immediate: true });
 
 const triggerFileInput = () => { fileInput.value.click(); };
 const handleProfileChange = (event) => {
@@ -244,8 +285,15 @@ const handleCreateRoom = (settings) => {
     alert(`방 생성 완료!\n닉네임: ${nickname.value}\n모드: ${selectedMode.value}\n인원: ${settings.players}명\n제한시간: ${settings.timeLimit}초`);
 };
 
-// 라라벨 소셜라이트 엔드포인트 트리거 함수
 const redirectToDiscordOAuth = () => {
     window.location.href = '/auth/discord/redirect';
 };
+
+const handleLogout = () => {
+    if (confirm('로그아웃 하시겠습니까?')) {
+        router.post('/logout');
+    }
+};
+
+
 </script>
