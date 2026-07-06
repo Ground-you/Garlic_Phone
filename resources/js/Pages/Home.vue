@@ -222,7 +222,7 @@ input::placeholder { color: rgba(255, 255, 255, 0.6); }
 import { ref, computed, watch, onMounted } from 'vue';
 import { Head, usePage, router } from '@inertiajs/vue3';
 import LobbySetting from './lobbySetting.vue';
-import ProfileCard from './ProfileCard.vue'; // ✅ 추가
+import ProfileCard from './ProfileCard.vue';
 
 const props = defineProps({
     defaultNickname: String,
@@ -242,18 +242,10 @@ const profilePreview = ref('/images/profile.png');
 const selectedFile = ref(null);
 
 const isModalOpen = ref(false);
-const isProfileCardOpen = ref(false); // ✅ 추가
-const statusMessage = ref('');        // ✅ 추가
+const isProfileCardOpen = ref(false); 
+const statusMessage = ref('');        
 
 const syncAuthUser = () => {
-    if (auth.value && auth.value.user) {
-        console.log("============== 디스코드 데이터 주입 확인 ==============");
-        console.log("유저 객체:", auth.value.user);
-        console.log("아바타 URL:", auth.value.user.avatar_url);
-        console.log("태그(Discriminator):", auth.value.user.discriminator);
-        console.log("====================================================");
-    }
-
     if (auth.value && auth.value.user) {
         nickname.value = auth.value.user.name || '';
         
@@ -290,14 +282,31 @@ const isNicknameValid = computed(() => {
     return nickname.value && nickname.value.trim().length > 0;
 });
 
+// 💡 [방 입장] 닉네임·아바타·isHost=false를 쿼리 파라미터로 함께 전달
 const handleJoinRoom = () => {
-    const roomCode = prompt("입장할 코드를 입력하세요:");
-    if(roomCode) alert(`방 코드 [${roomCode}]로 이동합니다.`);
+    const roomCode = prompt("입장할 로비 코드를 입력하세요:");
+    if (roomCode && roomCode.trim()) {
+        router.visit(`/lobby/${roomCode.trim()}`, {
+            data: {
+                nickname: nickname.value,
+                avatar:   profilePreview.value,
+                isHost:   'false',  // ✅ 명시적으로 게스트 처리
+            }
+        });
+    }
 };
 
+// 💡 2. [방 생성] 로직 수정: /lobby 로 POST 전송
 const handleCreateRoom = (settings) => {
     isModalOpen.value = false;
-    alert(`방 생성 완료!\n닉네임: ${nickname.value}\n모드: ${selectedMode.value}\n인원: ${settings.players}명\n제한시간: ${settings.timeLimit}초`);
+    
+    router.post('/lobby', {
+        nickname: nickname.value,
+        mode: selectedMode.value,
+        players: settings.players,
+        timeLimit: settings.timeLimit,
+        avatar: profilePreview.value
+    });
 };
 
 const redirectToDiscordOAuth = () => {

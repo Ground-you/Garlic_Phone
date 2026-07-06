@@ -5,6 +5,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Auth\DiscordController;
+use App\Http\Controllers\LobbyController;
 use Inertia\Inertia;
 
 Route::get('/', function () {
@@ -43,5 +44,9 @@ Route::post('/logout', function () {
     request()->session()->regenerateToken();
     return redirect()->to('http://127.0.0.1:8000');
 })->name('logout');
+
+Route::post('/lobby', [LobbyController::class, 'store'])->name('lobby.store');
+// 특정 방 입장 / 대기방 화면 보여주기 (GET)
+Route::get('/lobby/{id}', [LobbyController::class, 'show'])->name('lobby.show');
 
 require __DIR__.'/auth.php';
