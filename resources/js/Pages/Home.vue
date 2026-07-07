@@ -34,7 +34,7 @@
                         @click="isProfileCardOpen = !isProfileCardOpen"
                         class="absolute left-0 w-24 h-24 rounded-full border-[4px] border-[#865bc6] bg-white overflow-hidden shadow-md flex items-center justify-center z-10 group cursor-pointer active:scale-95 transition-transform duration-150"
                     >
-                        <img :src="auth.user ? profilePreview : profilePreview" alt="User Profile" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200" />
+                        <img :src="profilePreview" alt="User Profile" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200" />
                         <div v-if="!auth.user" class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
                             <span class="text-white text-1xl">프로필 설정</span>
                         </div>
@@ -42,6 +42,7 @@
 
                     <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleProfileChange" />
 
+                    <!-- ✅ @file-selected 추가 -->
                     <ProfileCard
                         :isOpen="isProfileCardOpen"
                         :nickname="nickname"
@@ -52,10 +53,11 @@
                         @update:nickname="nickname = $event"
                         @update:statusMessage="statusMessage = $event"
                         @update:avatarUrl="profilePreview = $event"
+                        @file-selected="profileFile = $event"
                     />
                 </div>
 
-                <div class="flex-1 bg-[#bfa2db] border-[4px] border-[#865bc6] rounded-3xl relative mt-10 pt-12 p-6 shadow-inner flex flex-col ">
+                <div class="flex-1 bg-[#bfa2db] border-[4px] border-[#865bc6] rounded-3xl relative mt-10 pt-12 p-6 shadow-inner flex flex-col">
                     <div class="absolute -top-4 left-6 bg-[#865bc6] text-white font-extrabold px-5 py-1.5 rounded-xl text-sm shadow-md">
                         플레이 방법
                     </div>
@@ -173,19 +175,19 @@
                 <div class="flex gap-4 w-full mt-6">
                     <button 
                         @click="handleJoinRoom"
-                        :disabled="!isNicknameValid"
-                        :class="[isNicknameValid ? 'bg-[#bfa2db] hover:bg-[#b090cf] border-[#865bc6] text-[#55328a] cursor-pointer active:scale-[0.98]' : 'bg-purple-300/50 border-purple-400 text-purple-400 opacity-60 cursor-not-allowed']"
+                        :disabled="!isNicknameValid || isLoading"
+                        :class="[isNicknameValid && !isLoading ? 'bg-[#bfa2db] hover:bg-[#b090cf] border-[#865bc6] text-[#55328a] cursor-pointer active:scale-[0.98]' : 'bg-purple-300/50 border-purple-400 text-purple-400 opacity-60 cursor-not-allowed']"
                         class="flex-1 border-[4px] font-black text-2xl py-4 rounded-2xl shadow-md transition-all duration-200"
                     >
-                        방 입장
+                        {{ isLoading ? '처리 중...' : '방 입장' }}
                     </button>
                     <button 
                         @click="isModalOpen = true"
-                        :disabled="!isNicknameValid"
-                        :class="[isNicknameValid ? 'bg-[#bfa2db] hover:bg-[#b090cf] border-[#865bc6] text-[#55328a] cursor-pointer active:scale-[0.98]' : 'bg-purple-300/50 border-purple-400 text-purple-400 opacity-60 cursor-not-allowed']"
+                        :disabled="!isNicknameValid || isLoading"
+                        :class="[isNicknameValid && !isLoading ? 'bg-[#bfa2db] hover:bg-[#b090cf] border-[#865bc6] text-[#55328a] cursor-pointer active:scale-[0.98]' : 'bg-purple-300/50 border-purple-400 text-purple-400 opacity-60 cursor-not-allowed']"
                         class="flex-1 border-[4px] font-black text-2xl py-4 rounded-2xl shadow-md transition-all duration-200"
                     >
-                        방 생성
+                        {{ isLoading ? '처리 중...' : '방 생성' }}
                     </button>
                 </div>
             </div>
@@ -226,89 +228,118 @@ import ProfileCard from './ProfileCard.vue';
 
 const props = defineProps({
     defaultNickname: String,
-    modes: Array
+    modes: Array,
 });
 
 const page = usePage();
-
 const auth = computed(() => page.props?.auth || { user: null });
 
-const nickname = ref(props.defaultNickname || '');
-const selectedMode = ref('normal');
-const activeTab = ref('mode');
+const nickname        = ref(props.defaultNickname || '');
+const selectedMode    = ref('normal');
+const activeTab       = ref('mode');
+const profilePreview  = ref('/images/profile.png');
+const profileFile     = ref(null);   // ✅ 실제 File 객체 보관
+const selectedFile    = ref(null);
+const fileInput       = ref(null);
+const isModalOpen     = ref(false);
+const isProfileCardOpen = ref(false);
+const statusMessage   = ref('');
+const isLoading       = ref(false);  // ✅ 업로드 중 버튼 비활성화용
 
-const fileInput = ref(null);
-const profilePreview = ref('/images/profile.png');
-const selectedFile = ref(null);
-
-const isModalOpen = ref(false);
-const isProfileCardOpen = ref(false); 
-const statusMessage = ref('');        
-
+// ── Auth 동기화 ───────────────────────────────────────
 const syncAuthUser = () => {
     if (auth.value && auth.value.user) {
         nickname.value = auth.value.user.name || '';
-        
-        const userAvatar = auth.value.user.avatar_url;
-        if (userAvatar) {
-            profilePreview.value = userAvatar;
-        } else {
-            profilePreview.value = '/images/profile.png';
-        }
+        profilePreview.value = auth.value.user.avatar_url || '/images/profile.png';
     } else {
         nickname.value = props.defaultNickname || '';
         profilePreview.value = '/images/profile.png';
     }
 };
 
-onMounted(() => {
-    syncAuthUser();
-});
+onMounted(() => { syncAuthUser(); });
+watch(auth, () => { syncAuthUser(); }, { deep: true, immediate: true });
 
-watch(auth, () => {
-    syncAuthUser();
-}, { deep: true, immediate: true });
-
-const triggerFileInput = () => { fileInput.value.click(); };
+// ── 파일 입력 (구형 fileInput ref용, 현재 ProfileCard에서 처리) ──
+const triggerFileInput   = () => { fileInput.value?.click(); };
 const handleProfileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
-        selectedFile.value = file;
+        selectedFile.value   = file;
+        profileFile.value    = file;
         profilePreview.value = URL.createObjectURL(file);
     }
 };
 
-const isNicknameValid = computed(() => {
-    return nickname.value && nickname.value.trim().length > 0;
-});
+// ── 유효성 ─────────────────────────────────────────────
+const isNicknameValid = computed(() =>
+    nickname.value && nickname.value.trim().length > 0
+);
 
-// 💡 [방 입장] 닉네임·아바타·isHost=false를 쿼리 파라미터로 함께 전달
-const handleJoinRoom = () => {
-    const roomCode = prompt("입장할 로비 코드를 입력하세요:");
-    if (roomCode && roomCode.trim()) {
-        router.visit(`/lobby/${roomCode.trim()}`, {
-            data: {
-                nickname: nickname.value,
-                avatar:   profilePreview.value,
-                isHost:   'false',  // ✅ 명시적으로 게스트 처리
-            }
+// ── ✅ 아바타 업로드 (blob URL → 서버 URL 변환) ──────────
+const uploadAvatarIfNeeded = async () => {
+    // Discord 유저이거나 파일 선택 안 했으면 현재 URL 그대로 사용
+    if (!profileFile.value) return profilePreview.value;
+    // 이미 서버 URL이면 그대로 사용
+    if (!profilePreview.value.startsWith('blob:')) return profilePreview.value;
+
+    const formData = new FormData();
+    formData.append('avatar', profileFile.value);
+
+    try {
+        const res = await window.axios.post('/upload-avatar', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
         });
+        profilePreview.value = res.data.url;
+        profileFile.value    = null;
+        return res.data.url;
+    } catch (e) {
+        console.error('아바타 업로드 실패:', e);
+        return '/images/profile.png';
     }
 };
 
-// 💡 2. [방 생성] 로직 수정: /lobby 로 POST 전송
-const handleCreateRoom = (settings) => {
+// ── ✅ 방 생성 (아바타 업로드 후 POST) ─────────────────
+const handleCreateRoom = async (settings) => {
     isModalOpen.value = false;
-    
-    router.post('/lobby', {
-        nickname: nickname.value,
-        mode: selectedMode.value,
-        players: settings.players,
-        timeLimit: settings.timeLimit,
-        avatar: profilePreview.value
-    });
+    isLoading.value   = true;
+
+    try {
+        const avatarUrl = await uploadAvatarIfNeeded();
+        router.post('/lobby', {
+            nickname:  nickname.value,
+            mode:      selectedMode.value,
+            players:   settings.players,
+            timeLimit: settings.timeLimit,
+            avatar:    avatarUrl,
+        });
+    } finally {
+        isLoading.value = false;
+    }
 };
 
+// ── ✅ 방 입장 (아바타 업로드 후 GET with data) ─────────
+const handleJoinRoom = async () => {
+    const roomCode = prompt("입장할 로비 코드를 입력하세요:");
+    if (!roomCode || !roomCode.trim()) return;
+
+    isLoading.value = true;
+
+    try {
+        const avatarUrl = await uploadAvatarIfNeeded();
+        router.visit(`/lobby/${roomCode.trim()}`, {
+            data: {
+                nickname: nickname.value,
+                avatar:   avatarUrl,
+                isHost:   'false',
+            },
+        });
+    } finally {
+        isLoading.value = false;
+    }
+};
+
+// ── 기타 ───────────────────────────────────────────────
 const redirectToDiscordOAuth = () => {
     window.location.href = '/auth/discord/redirect';
 };

@@ -45,8 +45,11 @@ Route::post('/logout', function () {
     return redirect()->to('http://127.0.0.1:8000');
 })->name('logout');
 
+Route::post('/upload-avatar', [LobbyController::class, 'uploadAvatar']);
 Route::post('/lobby', [LobbyController::class, 'store'])->name('lobby.store');
-// 특정 방 입장 / 대기방 화면 보여주기 (GET)
 Route::get('/lobby/{id}', [LobbyController::class, 'show'])->name('lobby.show');
+Route::post('/lobby/{code}/chat', [LobbyController::class, 'chat'])->name('lobby.chat');
+Route::patch('/lobby/{code}/toggle-chat', [LobbyController::class, 'toggleChat'])->name('lobby.toggle-chat');
+Route::delete('/lobby/{code}/leave', [LobbyController::class, 'leave'])->name('lobby.leave');
 
 require __DIR__.'/auth.php';

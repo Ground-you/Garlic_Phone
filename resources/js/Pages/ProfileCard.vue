@@ -115,9 +115,8 @@
                            text-white font-black text-lg py-2 rounded-full
                            shadow-[0_4px_0_#97479c]
                            active:translate-y-[3px] active:shadow-none
-                           tracking-wider"
+                           tracking-wider hover:bg-[#b57dcd]"
                     style="transition: background-color 60ms, transform 60ms, box-shadow 60ms;"
-                    :class="isModified ? 'hover:bg-[#b57dcd]' : 'hover:bg-[#b57dcd]'"
                 >
                     {{ isModified ? '변경사항 저장' : '확인' }}
                 </button>
@@ -130,34 +129,41 @@
 import { ref, watch, computed, nextTick } from 'vue';
 
 const props = defineProps({
-    isOpen: Boolean,
-    nickname: String,
+    isOpen:        Boolean,
+    nickname:      String,
     statusMessage: String,
-    avatarUrl: String,
-    isLoggedIn: Boolean,
+    avatarUrl:     String,
+    isLoggedIn:    Boolean,
 });
 
-const emit = defineEmits(['close', 'update:nickname', 'update:statusMessage', 'update:avatarUrl']);
+// ✅ file-selected 추가: 실제 File 객체를 Home.vue로 전달
+const emit = defineEmits([
+    'close',
+    'update:nickname',
+    'update:statusMessage',
+    'update:avatarUrl',
+    'file-selected',
+]);
 
-const localNickname = ref(props.nickname || '');
+const localNickname      = ref(props.nickname || '');
 const localStatusMessage = ref(props.statusMessage || '');
-const previewUrl = ref(props.avatarUrl || '/images/profile.png');
-const editingNickname = ref(false);
-const fileInput = ref(null);
-const nicknameInput = ref(null);
+const previewUrl         = ref(props.avatarUrl || '/images/profile.png');
+const editingNickname    = ref(false);
+const fileInput          = ref(null);
+const nicknameInput      = ref(null);
 
 const isModified = computed(() => {
-    return localNickname.value.trim() !== (props.nickname || '').trim() ||
-           localStatusMessage.value !== (props.statusMessage || '') ||
-           previewUrl.value !== (props.avatarUrl || '/images/profile.png');
+    return localNickname.value.trim() !== (props.nickname || '').trim()
+        || localStatusMessage.value    !== (props.statusMessage || '')
+        || previewUrl.value            !== (props.avatarUrl || '/images/profile.png');
 });
 
 watch(() => props.isOpen, (val) => {
     if (val) {
-        localNickname.value = props.nickname || '';
+        localNickname.value      = props.nickname || '';
         localStatusMessage.value = props.statusMessage || '';
-        previewUrl.value = props.avatarUrl || '/images/profile.png';
-        editingNickname.value = false;
+        previewUrl.value         = props.avatarUrl || '/images/profile.png';
+        editingNickname.value    = false;
     }
 });
 
@@ -179,18 +185,20 @@ const triggerFileInput = () => {
     fileInput.value?.click();
 };
 
+// ✅ File 객체도 함께 emit
 const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     previewUrl.value = URL.createObjectURL(file);
     emit('update:avatarUrl', previewUrl.value);
+    emit('file-selected', file);
 };
 
 const handleConfirm = () => {
     editingNickname.value = false;
-    emit('update:nickname', localNickname.value.trim() || props.nickname);
-    emit('update:statusMessage', localStatusMessage.value);
-    emit('update:avatarUrl', previewUrl.value);
+    emit('update:nickname',       localNickname.value.trim() || props.nickname);
+    emit('update:statusMessage',  localStatusMessage.value);
+    emit('update:avatarUrl',      previewUrl.value);
     emit('close');
 };
 </script>
