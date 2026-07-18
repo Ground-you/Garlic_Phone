@@ -8,7 +8,6 @@
 
             <!-- 상단: 내 프로필 + 방 설정 -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-
                 <div class="flex items-center relative pt-4">
                     <div class="relative z-10 flex-shrink-0">
                         <span v-if="isHost" class="absolute -top-5 right-1 text-2xl drop-shadow-sm">👑</span>
@@ -22,7 +21,6 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
-                    <!-- 채팅 토글: 방장만 -->
                     <div v-if="isHost" class="bg-[#a482cc] border-[3px] border-[#703b96] rounded-2xl px-4 py-2 flex items-center gap-3">
                         <span class="text-white font-black text-sm">채팅</span>
                         <button
@@ -43,7 +41,8 @@
             </div>
 
             <!-- 메인: 플레이어 목록 + 채팅 -->
-            <div class="flex-1 bg-[#a57cb8] border-[3px] border-[#703b96] rounded-2xl pt-10 p-5 relative flex flex-col lg:flex-row gap-5 mb-5 shadow-inner">
+            <!-- ✅ lg:items-stretch: 채팅박스가 플레이어 목록 높이에 맞게 유동적으로 늘어남 -->
+            <div class="flex-1 bg-[#a57cb8] border-[3px] border-[#703b96] rounded-2xl pt-10 p-5 relative flex flex-col lg:flex-row lg:items-stretch gap-5 mb-5 shadow-inner">
                 <div class="absolute -top-[3px] left-6 bg-[#8a4a9e] border-x-[3px] border-b-[3px] border-[#703b96] text-white font-black text-base px-8 py-1.5 rounded-b-xl">
                     플레이어 목록
                 </div>
@@ -84,12 +83,14 @@
                     </div>
                 </div>
 
-                <!-- 채팅창 -->
-                <div class="w-full lg:w-[340px] bg-[#4a3559]/80 border-[3px] border-[#362342] rounded-2xl p-4 flex flex-col shadow-md">
-                    <!-- 메시지 목록 -->
+                <!-- ✅ 채팅박스: 고정 높이 없이 플레이어 목록에 맞게 유동적으로 늘어남
+                     min-h-[300px]로 최소 높이만 보장, flex-col로 입력창 항상 하단 고정 -->
+                <div class="w-full lg:w-[340px] bg-[#4a3559]/80 border-[3px] border-[#362342] rounded-2xl p-4 shadow-md flex flex-col min-h-[300px]">
+
+                    <!-- 메시지 목록: flex-1 + min-h-0 으로 넘치면 스크롤 -->
                     <div
                         ref="chatContainer"
-                        class="flex-1 flex flex-col gap-2 min-h-[240px] max-h-[300px] overflow-y-auto mb-3 pr-1 custom-scroll"
+                        class="flex-1 min-h-0 flex flex-col gap-2 overflow-y-auto mb-3 pr-1 custom-scroll"
                     >
                         <div v-if="messages.length === 0" class="flex-1 flex items-end justify-center">
                             <div class="text-purple-200/50 text-center font-bold text-xs select-none">여기에 채팅이 표시됩니다.</div>
@@ -99,13 +100,16 @@
                                 <img :src="msg.avatar || '/images/profile.png'" class="w-full h-full object-cover" />
                             </div>
                             <div class="flex flex-col max-w-[80%]">
-                                <span class="text-purple-300 text-[10px] font-bold">{{ msg.nickname }} <span class="opacity-60">{{ msg.time }}</span></span>
+                                <span class="text-purple-300 text-[10px] font-bold">
+                                    {{ msg.nickname }} <span class="opacity-60">{{ msg.time }}</span>
+                                </span>
                                 <span class="text-white text-xs font-semibold bg-[#5c3e6e]/60 px-2 py-1 rounded-xl break-words">{{ msg.message }}</span>
                             </div>
                         </div>
                     </div>
-                    <!-- 채팅 입력 -->
-                    <div class="flex gap-2">
+
+                    <!-- ✅ 입력창: shrink-0으로 항상 하단 고정 -->
+                    <div class="flex gap-2 shrink-0">
                         <input
                             v-model="chatInput"
                             @keyup.enter="sendMessage"
@@ -217,17 +221,15 @@ const props = defineProps({
 
 const page = usePage();
 
-const isChatEnabled  = ref(props.chatEnabled);
+const isChatEnabled     = ref(props.chatEnabled);
 const isInviteModalOpen = ref(false);
 const generatedInviteCode = ref('');
-const isReady        = ref(false);
-const copied         = ref(false);
-const chatInput      = ref('');
-const chatContainer  = ref(null);
-
-// 실시간 플레이어 목록 (DB initial + Echo 실시간 업데이트)
-const activePlayers = ref([...props.initialPlayers]);
-const messages      = ref([]);
+const isReady           = ref(false);
+const copied            = ref(false);
+const chatInput         = ref('');
+const chatContainer     = ref(null);
+const activePlayers     = ref([...props.initialPlayers]);
+const messages          = ref([]);
 
 const userNickname = computed(() =>
     props.nickname || page.props?.auth?.user?.name || '플레이어'
@@ -235,9 +237,7 @@ const userNickname = computed(() =>
 const userAvatar = computed(() =>
     page.props?.auth?.user?.avatar_url || props.avatar || '/images/profile.png'
 );
-const modeText = computed(() =>
-    props.mode === 'normal' ? '일반' : props.mode || '일반'
-);
+const modeText     = computed(() => props.mode === 'normal' ? '일반' : props.mode || '일반');
 const currentCount = computed(() => activePlayers.value.length);
 const readyCount   = computed(() =>
     activePlayers.value.filter(p => p.is_ready || p.is_host).length
@@ -251,13 +251,10 @@ const getSlotClass = (index) => {
         : 'bg-[#a2c782] border-white shadow-md';
 };
 
-// ── Echo 실시간 구독 ─────────────────────────────────
 let echoChannel = null;
 
 onMounted(() => {
     echoChannel = window.Echo.channel(`lobby.${props.lobbyCode}`)
-
-        // 새 플레이어 입장
         .listen('.player.joined', (e) => {
             if (!activePlayers.value.find(p => p.session_id === e.session_id)) {
                 activePlayers.value.push({
@@ -269,15 +266,11 @@ onMounted(() => {
                 });
             }
         })
-
-        // 플레이어 퇴장
         .listen('.player.left', (e) => {
             activePlayers.value = activePlayers.value.filter(
                 p => p.session_id !== e.session_id
             );
         })
-
-        // 채팅 메시지 수신
         .listen('.chat.message', async (e) => {
             messages.value.push(e);
             await nextTick();
@@ -285,13 +278,10 @@ onMounted(() => {
                 chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
             }
         })
-
-        // 채팅 ON/OFF 수신 (게스트 화면 동기화)
         .listen('.chat.toggled', (e) => {
             isChatEnabled.value = e.enabled;
         });
 
-    // 브라우저 닫힐 때 퇴장 처리
     window.addEventListener('beforeunload', handleBeforeUnload);
 });
 
@@ -311,12 +301,10 @@ const handleBeforeUnload = () => {
     );
 };
 
-// ── 채팅 전송 ─────────────────────────────────────────
 const sendMessage = async () => {
     const msg = chatInput.value.trim();
     if (!msg || !isChatEnabled.value) return;
     chatInput.value = '';
-
     try {
         await window.axios.post(`/lobby/${props.lobbyCode}/chat`, {
             message:  msg,
@@ -325,29 +313,22 @@ const sendMessage = async () => {
         });
     } catch (e) {
         console.error('채팅 전송 실패:', e);
-        chatInput.value = msg; // 실패 시 복원
+        chatInput.value = msg;
     }
 };
 
-// ── 채팅 토글 (방장만) ───────────────────────────────
 const handleChatToggle = async () => {
     const newState = !isChatEnabled.value;
-    isChatEnabled.value = newState; // 즉각 UI 반영
-
+    isChatEnabled.value = newState;
     try {
-        await window.axios.patch(`/lobby/${props.lobbyCode}/toggle-chat`, {
-            enabled: newState,
-        });
+        await window.axios.patch(`/lobby/${props.lobbyCode}/toggle-chat`, { enabled: newState });
     } catch (e) {
-        isChatEnabled.value = !newState; // 실패 시 롤백
+        isChatEnabled.value = !newState;
         console.error('채팅 토글 실패:', e);
     }
 };
 
-// ── 초대 코드 ─────────────────────────────────────────
-const generateInviteCode = () => {
-    generatedInviteCode.value = props.lobbyCode;
-};
+const generateInviteCode = () => { generatedInviteCode.value = props.lobbyCode; };
 
 const copyInviteCode = async () => {
     try {
@@ -357,16 +338,13 @@ const copyInviteCode = async () => {
     } catch { copied.value = false; }
 };
 
-// ── 준비 ──────────────────────────────────────────────
 const toggleReady = () => { isReady.value = !isReady.value; };
 
-// ── 퇴장 / 방 해체 ───────────────────────────────────
 const leaveOrDisbandLobby = async () => {
     const msg = props.isHost
         ? '방을 해체하고 나가시겠습니까?'
         : '대기실에서 나가시겠습니까?';
     if (!confirm(msg)) return;
-
     try {
         await window.axios.delete(`/lobby/${props.lobbyCode}/leave`, {
             data: { isHost: props.isHost },
