@@ -5,6 +5,7 @@ use App\Events\ChatMessageSent;
 use App\Events\ChatToggled;
 use App\Events\PlayerJoined;
 use App\Events\PlayerLeft;
+use App\Events\PlayerReady;
 use App\Models\Lobby;
 use App\Models\LobbyPlayer;
 use Illuminate\Http\Request;
@@ -191,6 +192,20 @@ class LobbyController extends Controller
         if ($request->boolean('isHost')) {
             Lobby::where('code', $code)->delete();
         }
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function ready(Request $request, string $code)
+    {
+        $sessionId = session()->getId();
+        $isReady   = $request->boolean('is_ready');
+
+        LobbyPlayer::where('lobby_code', $code)
+            ->where('session_id', $sessionId)
+            ->update(['is_ready' => $isReady]);
+
+        broadcast(new PlayerReady($code, $sessionId, $isReady));
 
         return response()->json(['ok' => true]);
     }

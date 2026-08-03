@@ -237,18 +237,19 @@ const userNickname = computed(() =>
 const userAvatar = computed(() =>
     page.props?.auth?.user?.avatar_url || props.avatar || '/images/profile.png'
 );
+
 const modeText     = computed(() => props.mode === 'normal' ? '일반' : props.mode || '일반');
 const currentCount = computed(() => activePlayers.value.length);
-const readyCount   = computed(() =>
-    activePlayers.value.filter(p => p.is_ready || p.is_host).length
+const readyCount = computed(() =>
+    activePlayers.value.filter(p => p.is_host || p.is_ready).length
 );
 
 const getSlotClass = (index) => {
     const p = activePlayers.value[index];
     if (!p) return 'bg-[#956ca6]/40 border-dashed border-[#865996]';
-    return p.is_host
-        ? 'bg-[#b682c7] border-white shadow-md'
-        : 'bg-[#a2c782] border-white shadow-md';
+    if (p.is_host) return 'bg-[#b682c7] border-white shadow-md';
+    if (p.is_ready) return 'bg-[#a2c782] border-white shadow-md';   // 준비됨: 초록
+    return 'bg-[#9e82b8] border-purple-300 shadow-md';               // 미준비: 보라
 };
 
 let echoChannel = null;
@@ -261,7 +262,7 @@ onMounted(() => {
                     nickname:   e.nickname,
                     avatar:     e.avatar || '/images/profile.png',
                     is_host:    e.is_host,
-                    is_ready:   false,
+                    is_ready:   false, // 입장 시 항상 미준비
                     session_id: e.session_id,
                 });
             }
@@ -270,6 +271,10 @@ onMounted(() => {
             activePlayers.value = activePlayers.value.filter(
                 p => p.session_id !== e.session_id
             );
+        })
+        .listen('.player.ready', (e) => {
+            const player = activePlayers.value.find(p => p.session_id === e.session_id);
+            if (player) player.is_ready = e.is_ready;
         })
         .listen('.chat.message', async (e) => {
             messages.value.push(e);
@@ -338,7 +343,26 @@ const copyInviteCode = async () => {
     } catch { copied.value = false; }
 };
 
-const toggleReady = () => { isReady.value = !isReady.value; };
+const toggleReady = async () => {
+    const newState = !isReady.value;
+    isReady.value = newState;
+
+    // 내 슬롯 즉시 업데이트
+    const me = activePlayers.value.find(p => p.session_id === props.mySessionId);
+    if (me) me.is_ready = newState;
+
+    try {
+        await window.axios.patch(`/lobby/${props.lobbyCode}/ready`, {
+            is_ready: newState,
+        });
+    } catch (e) {
+        // 실패 시 롤백
+        isReady.value = !newState;
+        const me2 = activePlayers.value.find(p => p.session_id === props.mySessionId);
+        if (me2) me2.is_ready = !newState;
+        console.error('준비 상태 변경 실패:', e);
+    }
+};
 
 const leaveOrDisbandLobby = async () => {
     const msg = props.isHost
