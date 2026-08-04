@@ -15,6 +15,7 @@ class PlayerJoined implements ShouldBroadcastNow
         public string $lobbyCode,
         public string $nickname,
         public string $avatar,
+        public string $statusMessage,
         public bool   $isHost,
         public string $sessionId,
     ) {}
@@ -31,6 +32,7 @@ class PlayerJoined implements ShouldBroadcastNow
         return [
             'nickname'   => $this->nickname,
             'avatar'     => $this->avatar,
+            'status_message'    => $this->statusMessage,
             'is_host'    => $this->isHost,
             'session_id' => $this->sessionId,
         ];

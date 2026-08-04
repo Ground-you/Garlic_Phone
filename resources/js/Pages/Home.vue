@@ -238,13 +238,13 @@ const nickname        = ref(props.defaultNickname || '');
 const selectedMode    = ref('normal');
 const activeTab       = ref('mode');
 const profilePreview  = ref('/images/profile.png');
-const profileFile     = ref(null);   // ✅ 실제 File 객체 보관
+const profileFile     = ref(null);   // 실제 File 객체 보관
 const selectedFile    = ref(null);
 const fileInput       = ref(null);
 const isModalOpen     = ref(false);
 const isProfileCardOpen = ref(false);
 const statusMessage   = ref('');
-const isLoading       = ref(false);  // ✅ 업로드 중 버튼 비활성화용
+const isLoading       = ref(false);  // 업로드 중 버튼 비활성화용
 
 // ── Auth 동기화 ───────────────────────────────────────
 const syncAuthUser = () => {
@@ -276,7 +276,7 @@ const isNicknameValid = computed(() =>
     nickname.value && nickname.value.trim().length > 0
 );
 
-// ── ✅ 아바타 업로드 (blob URL → 서버 URL 변환) ──────────
+// ── 아바타 업로드 (blob URL → 서버 URL 변환) ──────────
 const uploadAvatarIfNeeded = async () => {
     // Discord 유저이거나 파일 선택 안 했으면 현재 URL 그대로 사용
     if (!profileFile.value) return profilePreview.value;
@@ -299,7 +299,7 @@ const uploadAvatarIfNeeded = async () => {
     }
 };
 
-// ── ✅ 방 생성 (아바타 업로드 후 POST) ─────────────────
+// ── 방 생성 (아바타 업로드 후 POST) ─────────────────
 const handleCreateRoom = async (settings) => {
     isModalOpen.value = false;
     isLoading.value   = true;
@@ -312,13 +312,14 @@ const handleCreateRoom = async (settings) => {
             players:   settings.players,
             timeLimit: settings.timeLimit,
             avatar:    avatarUrl,
+            statusMessage: statusMessage.value,
         });
     } finally {
         isLoading.value = false;
     }
 };
 
-// ── ✅ 방 입장 (아바타 업로드 후 GET with data) ─────────
+// ── 방 입장 (아바타 업로드 후 GET with data) ─────────
 const handleJoinRoom = async () => {
     const roomCode = prompt("입장할 로비 코드를 입력하세요:");
     if (!roomCode || !roomCode.trim()) return;
@@ -332,6 +333,7 @@ const handleJoinRoom = async () => {
                 nickname: nickname.value,
                 avatar:   avatarUrl,
                 isHost:   'false',
+                statusMessage: statusMessage.value,
             },
         });
     } finally {
