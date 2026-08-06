@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Auth\DiscordController;
 use App\Http\Controllers\LobbyController;
+use App\Http\Controllers\GameController;
 use Inertia\Inertia;
 
 Route::get('/', function () {
@@ -45,6 +46,7 @@ Route::post('/logout', function () {
     return redirect()->to('http://127.0.0.1:8000');
 })->name('logout');
 
+
 Route::post('/upload-avatar', [LobbyController::class, 'uploadAvatar']);
 Route::post('/lobby', [LobbyController::class, 'store'])->name('lobby.store');
 Route::get('/lobby/{id}', [LobbyController::class, 'show'])->name('lobby.show');
@@ -52,5 +54,7 @@ Route::post('/lobby/{code}/chat', [LobbyController::class, 'chat'])->name('lobby
 Route::patch('/lobby/{code}/toggle-chat', [LobbyController::class, 'toggleChat'])->name('lobby.toggle-chat');
 Route::delete('/lobby/{code}/leave', [LobbyController::class, 'leave'])->name('lobby.leave');
 Route::patch('/lobby/{code}/ready', [LobbyController::class, 'ready'])->name('lobby.ready');
+Route::post('/lobby/{code}/start', [LobbyController::class, 'start'])->name('lobby.start');
+Route::get('/game/{code}', [GameController::class, 'show'])->name('game.show');
 
 require __DIR__.'/auth.php';

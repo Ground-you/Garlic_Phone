@@ -140,7 +140,7 @@
                 <div class="flex-1 min-w-[150px] bg-[#bfa2db]/40 border-[3px] border-[#703b96] text-[#42215c] font-black text-base py-3 rounded-xl flex items-center justify-center shadow-inner">
                     준비된 인원: {{ readyCount }} / {{ currentCount }}
                 </div>
-                <button class="flex-1 min-w-[130px] bg-[#d3aade] hover:bg-[#c39ac7] border-[3px] border-[#703b96] text-[#42215c] font-black text-base py-3 rounded-xl transition-transform active:scale-95">시작</button>
+                <button @click="startGame" class="flex-1 min-w-[130px] bg-[#d3aade] hover:bg-[#c39ac7] border-[3px] border-[#703b96] text-[#42215c] font-black text-base py-3 rounded-xl transition-transform active:scale-95">시작</button>
             </div>
 
             <div v-else class="flex flex-wrap gap-4 w-full">
@@ -270,6 +270,9 @@ onMounted(() => {
                 }
             }
         })
+        .listen('.game.started', () => {
+        router.visit(`/game/${props.lobbyCode}`);
+        })
         .listen('.chat.message', async (e) => {
             messages.value.push(e);
             await nextTick();
@@ -334,6 +337,15 @@ const toggleReady = async () => {
     }
 };
 
+const startGame = async () => {
+    try {
+        await window.axios.post(`/lobby/${props.lobbyCode}/start`);
+        router.visit(`/game/${props.lobbyCode}`); // 방장 본인은 즉시 이동
+    } catch (e) {
+        console.error('게임 시작 실패:', e);
+    }
+};
+
 const generateInviteCode = () => { generatedInviteCode.value = props.lobbyCode; };
 
 const copyInviteCode = async () => {
@@ -353,6 +365,7 @@ const leaveOrDisbandLobby = async () => {
         router.visit('/');
     }
 };
+
 </script>
 
 <style scoped>

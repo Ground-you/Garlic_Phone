@@ -12,9 +12,9 @@ window.Echo = new Echo({
     key: import.meta.env.VITE_REVERB_APP_KEY,
     wsHost: import.meta.env.VITE_REVERB_HOST || 'localhost',
     wsPort: Number(
-        import.meta.env.VITE_REVERB_PORT) || 8080,
+        import.meta.env.VITE_REVERB_PORT) || 8088,
     wssPort: Number(
-        import.meta.env.VITE_REVERB_PORT) || 8080,
+        import.meta.env.VITE_REVERB_PORT) || 8088,
     forceTLS: (
         import.meta.env.VITE_REVERB_SCHEME || 'http') === 'https', // ← 'http'로 수정
     enabledTransports: ['ws', 'wss'],
