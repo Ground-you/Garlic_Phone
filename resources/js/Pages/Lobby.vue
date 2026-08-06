@@ -4,7 +4,6 @@
     <!-- 방 해체 알림 -->
     <div v-if="isDisbanded" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100]">
         <div class="bg-[#f6dff2] border-[4px] border-[#b35cb8] rounded-3xl p-10 flex flex-col items-center gap-5 shadow-2xl">
-            <span class="text-4xl">😢</span>
             <p class="text-[#50216b] font-black text-2xl text-center">방장이 방을 해체했습니다.</p>
             <button @click="router.visit('/')" class="bg-[#b35cb8] hover:bg-[#97479c] text-white font-black text-lg px-8 py-3 rounded-2xl transition active:scale-95">
                 홈으로 돌아가기

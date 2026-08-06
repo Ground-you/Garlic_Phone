@@ -114,8 +114,15 @@ class LobbyController extends Controller
                 broadcast(new PlayerJoined(
                     $id, $nickname, $avatar, $statusMessage, false, $sessionId
                 ));
+            } else {
+                // 세션이 이미 존재하더라도 한마디/프로필 데이터 최신화
+                $existing->update([
+                    'nickname'       => $nickname,
+                    'avatar'         => $avatar,
+                    'status_message' => $statusMessage,
+                ]);
             }
-        } // ✅ 빠진 닫는 중괄호
+        } 
 
         $initialPlayers = LobbyPlayer::where('lobby_code', $id)
             ->orderByDesc('is_host')
