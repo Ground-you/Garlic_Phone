@@ -7,6 +7,7 @@ use App\Events\PlayerJoined;
 use App\Events\PlayerLeft;
 use App\Events\PlayerReady;
 use App\Events\LobbyDisbanded;
+use App\Events\GameStarted;
 use App\Models\Lobby;
 use App\Models\LobbyPlayer;
 use Illuminate\Http\Request;
@@ -212,6 +213,35 @@ class LobbyController extends Controller
             ->update(['is_ready' => $isReady]);
 
         broadcast(new PlayerReady($code, $sessionId, $isReady));
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function start(Request $request, string $code)
+    {
+        $sessionId = session()->getId();
+
+        // 방장 검증
+        $isHost = LobbyPlayer::where('lobby_code', $code)
+            ->where('session_id', $sessionId)
+            ->where('is_host', true)
+            ->exists();
+
+        if (!$isHost) {
+            return response()->json(['error' => '방장만 게임을 시작할 수 있습니다.'], 403);
+        }
+
+        // (선택) 전원 준비 확인
+        $notReadyCount = LobbyPlayer::where('lobby_code', $code)
+            ->where('is_host', false)
+            ->where('is_ready', false)
+            ->count();
+
+        if ($notReadyCount > 0) {
+            return response()->json(['error' => '아직 준비되지 않은 플레이어가 있습니다.'], 422);
+        }
+
+        broadcast(new GameStarted($code))->toOthers();
 
         return response()->json(['ok' => true]);
     }
