@@ -23,7 +23,7 @@
                         <input 
                             v-model="nickname"
                             type="text" 
-                            class="w-full bg-transparent border-none text-white font-black text-center text-xl focus:outline-none placeholder-purple-200 pl-20 pr-4 py-2"
+                            class="w-full bg-transparent border-none text-white font-black text-center text-xl focus:outline-none focus:ring-0 focus:border-none placeholder-purple-200 pl-20 pr-4 py-2"
                             :placeholder="auth.user ? auth.user.name : '닉네임 입력...'"
                             maxLength="12"
                             :disabled="auth.user !== null"

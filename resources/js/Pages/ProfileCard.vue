@@ -62,7 +62,7 @@
                                 :disabled="!editingNickname || isLoggedIn"
                                 ref="nicknameInput"
                                 maxlength="12"
-                                class="w-full bg-transparent text-white font-black text-lg text-center border-none outline-none focus:outline-none p-0 m-0 disabled:cursor-default"
+                                class="w-full bg-transparent text-white font-black text-lg text-center border-none outline-none focus:outline-none focus:border-none focus:ring-0 p-0 m-0 disabled:cursor-default"
                                 placeholder="닉네임..."
                             />
                         </div>
