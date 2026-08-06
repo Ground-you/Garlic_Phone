@@ -11,7 +11,7 @@
         </div>
     </div>
 
-    <!-- ✅ 플레이어 프로필 팝업 -->
+    <!-- 플레이어 프로필 팝업 -->
     <Transition name="profile-pop">
         <div v-if="selectedPlayer" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" @click.self="selectedPlayer = null">
             <div class="bg-[#f6dff2] border-[5px] border-[#b35cb8] rounded-[32px] p-6 shadow-2xl flex flex-col items-center gap-4 w-[320px]">
@@ -29,7 +29,7 @@
                     <span v-if="selectedPlayer.is_ready && !selectedPlayer.is_host" class="bg-green-500 text-white font-black text-xs px-3 py-1 rounded-full">✅ 준비 완료</span>
                     <span v-if="!selectedPlayer.is_ready && !selectedPlayer.is_host" class="bg-gray-400 text-white font-black text-xs px-3 py-1 rounded-full">⏳ 준비 중</span>
                 </div>
-                <!-- ✅ 한마디: 항상 표시 -->
+                <!--  한마디: 항상 표시 -->
                 <div class="w-full bg-[#fff5fe] border-[3px] border-[#b35cb8] rounded-2xl px-4 py-3 min-h-[70px] flex items-center justify-center">
                     <p v-if="selectedPlayer.status_message" class="text-[#50216b] font-bold text-sm text-center break-words">
                         "{{ selectedPlayer.status_message }}"
@@ -90,7 +90,7 @@
                         class="border-[3px] rounded-2xl p-3 flex items-center justify-between min-h-[70px] transition-colors duration-300"
                     >
                         <template v-if="activePlayers[index]">
-                            <!-- ✅ 클릭하면 프로필 팝업 -->
+                            <!-- 클릭하면 프로필 팝업 -->
                             <div class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" @click="selectedPlayer = activePlayers[index]">
                                 <div class="w-11 h-11 rounded-full border-2 border-purple-300 bg-white overflow-hidden">
                                     <img :src="activePlayers[index].avatar || '/images/profile.png'" class="w-full h-full object-cover" />
@@ -172,7 +172,7 @@
                         <template v-if="generatedInviteCode">
                             <span class="text-purple-200 text-xs font-bold mb-1">생성된 초대 코드</span>
                             <div class="text-white text-3xl font-black tracking-widest bg-[#3f224f] px-5 py-2.5 rounded-lg border border-purple-400/30 select-all">{{ generatedInviteCode }}</div>
-                            <button @click="copyInviteCode" class="mt-3 text-purple-300 text-xs font-bold hover:text-white transition">{{ copied ? '✅ 복사됨' : '📋 클립보드에 복사' }}</button>
+                            <button @click="copyInviteCode" class="mt-3 text-purple-300 text-xs font-bold hover:text-white transition">{{ copied ? '복사됨' : '클립보드에 복사' }}</button>
                         </template>
                         <template v-else>
                             <p class="text-purple-200/60 font-black text-sm">여기에 생성 됩니다.</p>
@@ -217,7 +217,7 @@ const chatContainer       = ref(null);
 const activePlayers       = ref([...props.initialPlayers]);
 const messages            = ref([]);
 const isDisbanded         = ref(false);
-const selectedPlayer      = ref(null); // ✅ 팝업으로 볼 플레이어
+const selectedPlayer      = ref(null); // 팝업으로 볼 플레이어
 
 const userNickname = computed(() =>
     props.nickname || page.props?.auth?.user?.name || '플레이어'
@@ -248,7 +248,7 @@ onMounted(() => {
                 activePlayers.value.push({
                     nickname:       e.nickname,
                     avatar:         e.avatar || '/images/profile.png',
-                    status_message: e.status_message || '', // ✅ 추가
+                    status_message: e.status_message || '', // 추가
                     is_host:        e.is_host,
                     is_ready:       false,
                     session_id:     e.session_id,
