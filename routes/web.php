@@ -51,5 +51,6 @@ Route::get('/lobby/{id}', [LobbyController::class, 'show'])->name('lobby.show');
 Route::post('/lobby/{code}/chat', [LobbyController::class, 'chat'])->name('lobby.chat');
 Route::patch('/lobby/{code}/toggle-chat', [LobbyController::class, 'toggleChat'])->name('lobby.toggle-chat');
 Route::delete('/lobby/{code}/leave', [LobbyController::class, 'leave'])->name('lobby.leave');
+Route::patch('/lobby/{code}/ready', [LobbyController::class, 'ready'])->name('lobby.ready');
 
 require __DIR__.'/auth.php';
