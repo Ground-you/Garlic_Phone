@@ -5,6 +5,8 @@ use App\Events\ChatMessageSent;
 use App\Events\ChatToggled;
 use App\Events\PlayerJoined;
 use App\Events\PlayerLeft;
+use App\Events\PlayerReady;
+use App\Events\LobbyDisbanded;
 use App\Models\Lobby;
 use App\Models\LobbyPlayer;
 use Illuminate\Http\Request;
@@ -22,6 +24,7 @@ class LobbyController extends Controller
             'players'   => 'required|integer|min:2|max:12',
             'timeLimit' => 'required|integer|min:10|max:120',
             'avatar'    => 'nullable|string',
+            'statusMessage' => 'nullable|string|max:80',
         ]);
 
         do { $code = (string) rand(10000, 99999); }
@@ -47,12 +50,13 @@ class LobbyController extends Controller
             'lobby_code' => $code,
             'nickname'   => $validated['nickname'],
             'avatar'     => $avatar,
+            'status_message' => $validated['statusMessage'] ?? null,
             'is_host'    => true,
             'is_ready'   => true,
             'session_id' => session()->getId(),
         ]);
 
-        // ✅ nickname을 redirect에 포함
+        // nickname을 redirect에 포함
         return redirect()->route('lobby.show', [
             'id'       => $code,
             'isHost'   => 'true',
@@ -68,7 +72,6 @@ class LobbyController extends Controller
         $sessionId = session()->getId();
 
         if ($isHost) {
-            // ✅ 방장: DB에서 닉네임/아바타 직접 읽기 (redirect 후에도 정확)
             $hostPlayer = LobbyPlayer::where('lobby_code', $id)
                 ->where('session_id', $sessionId)
                 ->where('is_host', true)
@@ -79,9 +82,9 @@ class LobbyController extends Controller
                 ?? $request->user()?->name
                 ?? '방장';
             $avatar = $hostPlayer?->avatar ?? '/images/profile.png';
+            $statusMessage = $hostPlayer?->status_message ?? '';
 
         } else {
-            // 게스트: 쿼리 파라미터
             $nickname = $request->query('nickname')
                 ?? $request->user()?->name
                 ?? '게스트_' . rand(100, 999);
@@ -92,30 +95,32 @@ class LobbyController extends Controller
                     ? $avatarParam
                     : '/images/profile.png');
 
-            // 게스트 DB 등록 + broadcast
+            $statusMessage = $request->query('statusMessage', ''); // ✅ 추가
+
             $existing = LobbyPlayer::where('lobby_code', $id)
                 ->where('session_id', $sessionId)->first();
 
             if (!$existing) {
                 LobbyPlayer::create([
-                    'lobby_code' => $id,
-                    'nickname'   => $nickname,
-                    'avatar'     => $avatar,
-                    'is_host'    => false,
-                    'is_ready'   => false,
-                    'session_id' => $sessionId,
+                    'lobby_code'     => $id,
+                    'nickname'       => $nickname,
+                    'avatar'         => $avatar,
+                    'status_message' => $statusMessage,
+                    'is_host'        => false,
+                    'is_ready'       => false,
+                    'session_id'     => $sessionId,
                 ]);
 
                 broadcast(new PlayerJoined(
-                    $id, $nickname, $avatar, false, $sessionId
-                ))->toOthers();
+                    $id, $nickname, $avatar, $statusMessage, false, $sessionId
+                ));
             }
-        }
+        } // ✅ 빠진 닫는 중괄호
 
         $initialPlayers = LobbyPlayer::where('lobby_code', $id)
             ->orderByDesc('is_host')
             ->orderBy('created_at')
-            ->get(['nickname', 'avatar', 'is_host', 'is_ready', 'session_id'])
+            ->get(['nickname', 'avatar', 'status_message', 'is_host', 'is_ready', 'session_id'])
             ->toArray();
 
         return Inertia::render('Lobby', [
@@ -186,11 +191,27 @@ class LobbyController extends Controller
             ->where('session_id', $sessionId)
             ->delete();
 
-        broadcast(new PlayerLeft($code, $sessionId))->toOthers();
-
         if ($request->boolean('isHost')) {
+            // 삭제 전에 broadcast (삭제 후엔 채널이 없어서 못 받음)
+            broadcast(new LobbyDisbanded($code));
             Lobby::where('code', $code)->delete();
+        } else {
+            broadcast(new PlayerLeft($code, $sessionId))->toOthers();
         }
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function ready(Request $request, string $code)
+    {
+        $sessionId = session()->getId();
+        $isReady   = $request->boolean('is_ready');
+
+        LobbyPlayer::where('lobby_code', $code)
+            ->where('session_id', $sessionId)
+            ->update(['is_ready' => $isReady]);
+
+        broadcast(new PlayerReady($code, $sessionId, $isReady));
 
         return response()->json(['ok' => true]);
     }
