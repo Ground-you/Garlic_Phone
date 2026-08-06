@@ -56,5 +56,6 @@ Route::delete('/lobby/{code}/leave', [LobbyController::class, 'leave'])->name('l
 Route::patch('/lobby/{code}/ready', [LobbyController::class, 'ready'])->name('lobby.ready');
 Route::post('/lobby/{code}/start', [LobbyController::class, 'start'])->name('lobby.start');
 Route::get('/game/{code}', [GameController::class, 'show'])->name('game.show');
+Route::post('/game/{code}/submit-topic', [GameController::class, 'submitTopic'])->name('game.submit-topic');
 
 require __DIR__.'/auth.php';
