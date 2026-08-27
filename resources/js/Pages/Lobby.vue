@@ -1,7 +1,7 @@
 <template>
     <Head title="대기실 - Garlic Phone" />
 
-    <!-- 방 해체 알림 -->
+    <!-- 1. 방 해체 오버레이 -->
     <div v-if="isDisbanded" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100]">
         <div class="bg-[#f6dff2] border-[4px] border-[#b35cb8] rounded-3xl p-10 flex flex-col items-center gap-5 shadow-2xl">
             <p class="text-[#50216b] font-black text-2xl text-center">방장이 방을 해체했습니다.</p>
@@ -11,25 +11,21 @@
         </div>
     </div>
 
-    <!-- 플레이어 프로필 팝업 -->
+    <!-- 2. 플레이어 정보 상세 팝업 -->
     <Transition name="profile-pop">
         <div v-if="selectedPlayer" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" @click.self="selectedPlayer = null">
             <div class="bg-[#f6dff2] border-[5px] border-[#b35cb8] rounded-[32px] p-6 shadow-2xl flex flex-col items-center gap-4 w-[320px]">
-                <!-- 아바타 -->
                 <div class="w-24 h-24 rounded-full border-[4px] border-[#b35cb8] overflow-hidden bg-white shadow-md">
                     <img :src="selectedPlayer.avatar || '/images/profile.png'" class="w-full h-full object-cover" />
                 </div>
-                <!-- 닉네임 -->
                 <div class="bg-[#ca8fe2] border-[3px] border-[#b35cb8] rounded-full px-6 py-2 w-full text-center">
                     <span class="text-white font-black text-lg">{{ selectedPlayer.nickname }}</span>
                 </div>
-                <!-- 뱃지 -->
                 <div class="flex gap-2">
                     <span v-if="selectedPlayer.is_host" class="bg-[#703b96] text-white font-black text-xs px-3 py-1 rounded-full">👑 방장</span>
                     <span v-if="selectedPlayer.is_ready && !selectedPlayer.is_host" class="bg-green-500 text-white font-black text-xs px-3 py-1 rounded-full">✅ 준비 완료</span>
                     <span v-if="!selectedPlayer.is_ready && !selectedPlayer.is_host" class="bg-gray-400 text-white font-black text-xs px-3 py-1 rounded-full">⏳ 준비 중</span>
                 </div>
-                <!--  한마디: 항상 표시 -->
                 <div class="w-full bg-[#fff5fe] border-[3px] border-[#b35cb8] rounded-2xl px-4 py-3 min-h-[70px] flex items-center justify-center">
                     <p v-if="selectedPlayer.status_message" class="text-[#50216b] font-bold text-sm text-center break-words">
                         "{{ selectedPlayer.status_message }}"
@@ -38,7 +34,6 @@
                         한마디가 없습니다.
                     </p>
                 </div>
-                <!-- 닫기 -->
                 <button @click="selectedPlayer = null" class="bg-[#ca8fe2] hover:bg-[#b57dcd] border-[3px] border-[#b35cb8] text-white font-black text-base px-8 py-2 rounded-2xl transition active:scale-95" style="transition: background-color 60ms, transform 60ms;">
                     닫기
                 </button>
@@ -46,11 +41,13 @@
         </div>
     </Transition>
 
+    <!-- 메인 대기실 화면 -->
     <div class="min-h-screen bg-[#bfa2db] flex items-center justify-center p-4 relative overflow-hidden select-none">
         <div class="absolute inset-0 opacity-25" style="background-image: radial-gradient(#865bc6 2px, transparent 1.5px); background-size: 24px 24px;"></div>
 
         <div class="w-full max-w-6xl min-h-[660px] bg-[#c3addb] border-[4px] border-white/60 rounded-3xl p-6 shadow-xl relative z-10 flex flex-col justify-between">
 
+            <!-- 상단 바: 내 정보 및 방 설정 정보 -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div class="flex items-center relative pt-4">
                     <div class="relative z-10 flex-shrink-0">
@@ -77,11 +74,13 @@
                 </div>
             </div>
 
+            <!-- 중앙 섹션: 플레이어 슬롯 및 채팅창 -->
             <div class="flex-1 bg-[#a57cb8] border-[3px] border-[#703b96] rounded-2xl pt-10 p-5 relative flex flex-col lg:flex-row lg:items-stretch gap-5 mb-5 shadow-inner">
                 <div class="absolute -top-[3px] left-6 bg-[#8a4a9e] border-x-[3px] border-b-[3px] border-[#703b96] text-white font-black text-base px-8 py-1.5 rounded-b-xl">
                     플레이어 목록
                 </div>
 
+                <!-- 1. 플레이어 슬롯 그리드 -->
                 <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 content-start">
                     <div
                         v-for="(slot, index) in Number(players)"
@@ -90,7 +89,6 @@
                         class="border-[3px] rounded-2xl p-3 flex items-center justify-between min-h-[70px] transition-colors duration-300"
                     >
                         <template v-if="activePlayers[index]">
-                            <!-- 클릭하면 프로필 팝업 -->
                             <div class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" @click="selectedPlayer = activePlayers[index]">
                                 <div class="w-11 h-11 rounded-full border-2 border-purple-300 bg-white overflow-hidden">
                                     <img :src="activePlayers[index].avatar || '/images/profile.png'" class="w-full h-full object-cover" />
@@ -109,6 +107,7 @@
                     </div>
                 </div>
 
+                <!-- 2. 실시간 채팅 위젯 -->
                 <div class="w-full lg:w-[340px] bg-[#4a3559]/80 border-[3px] border-[#362342] rounded-2xl p-4 shadow-md flex flex-col min-h-[300px]">
                     <div ref="chatContainer" class="flex-1 min-h-0 flex flex-col gap-2 overflow-y-auto mb-3 pr-1 custom-scroll">
                         <div v-if="messages.length === 0" class="flex-1 flex items-end justify-center">
@@ -119,7 +118,7 @@
                                 <img :src="msg.avatar || '/images/profile.png'" class="w-full h-full object-cover" />
                             </div>
                             <div class="flex flex-col max-w-[80%]">
-                                <span class="text-purple-300 text-[10px] font-bold">{{ msg.nickname }} <span class="opacity-60">{{ msg.time }}</span></span>
+                                <span class="text-purple-300 text-[10px] font-bold">{{ msg.nickname }} <span class="opacity-60"></span></span>
                                 <span class="text-white text-xs font-semibold bg-[#5c3e6e]/60 px-2 py-1 rounded-xl break-words">{{ msg.message }}</span>
                             </div>
                         </div>
@@ -134,9 +133,10 @@
                 </div>
             </div>
 
+            <!-- 하단 조작 컨트롤러 (방장 / 플레이어 분기) -->
             <div v-if="isHost" class="flex flex-wrap gap-4 w-full">
                 <button @click="isInviteModalOpen = true" class="flex-1 min-w-[130px] bg-[#d3aade] hover:bg-[#c39ac7] border-[3px] border-[#703b96] text-[#42215c] font-black text-base py-3 rounded-xl transition-transform active:scale-95">플레이어 초대</button>
-                <button @click="leaveOrDisbandLobby" class="flex-1 min-w-[130px] bg-[#d3aade] hover:bg-[#c39ac7] border-[3px] border-[#703b96] text-[#42215c] font-black text-base py-3 rounded-xl transition-transform active:scale-95">방 해체</button>
+                <button @click="isConfirmModalOpen = true" class="flex-1 min-w-[130px] bg-[#d3aade] hover:bg-[#c39ac7] border-[3px] border-[#703b96] text-[#42215c] font-black text-base py-3 rounded-xl transition-transform active:scale-95">방 해체</button>
                 <div class="flex-1 min-w-[150px] bg-[#bfa2db]/40 border-[3px] border-[#703b96] text-[#42215c] font-black text-base py-3 rounded-xl flex items-center justify-center shadow-inner">
                     준비된 인원: {{ readyCount }} / {{ currentCount }}
                 </div>
@@ -144,7 +144,7 @@
             </div>
 
             <div v-else class="flex flex-wrap gap-4 w-full">
-                <button @click="leaveOrDisbandLobby" class="flex-1 min-w-[130px] bg-red-400 hover:bg-red-500 border-[3px] border-red-700 text-white font-black text-base py-3 rounded-xl transition-transform active:scale-95">나가기</button>
+                <button @click="isConfirmModalOpen = true" class="flex-1 min-w-[130px] bg-red-400 hover:bg-red-500 border-[3px] border-red-700 text-white font-black text-base py-3 rounded-xl transition-transform active:scale-95">나가기</button>
                 <div class="flex-1 min-w-[150px] bg-[#bfa2db]/40 border-[3px] border-[#703b96] text-[#42215c] font-black text-base py-3 rounded-xl flex items-center justify-center shadow-inner">
                     준비된 인원: {{ readyCount }} / {{ currentCount }}
                 </div>
@@ -156,7 +156,7 @@
             </div>
         </div>
 
-        <!-- 초대 모달 -->
+        <!-- 3. 파티 초대 모달 -->
         <div v-if="isInviteModalOpen" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
             <div class="w-full max-w-xl bg-[#c59ad4] border-[4px] border-[#7a3e8c] rounded-2xl shadow-2xl relative flex flex-col items-center p-6">
                 <div class="absolute -top-[22px] bg-[#9146a1] border-[3px] border-[#7a3e8c] text-white font-black text-sm px-6 py-1.5 rounded-xl">
@@ -182,6 +182,37 @@
                 <button @click="isInviteModalOpen = false" class="bg-[#a865b8] border-[3px] border-[#693575] text-white font-black text-base px-10 py-2 rounded-xl">확인</button>
             </div>
         </div>
+
+        <!-- 4. 퇴장 / 방 해체 확인 커스텀 모달 -->
+        <Transition name="profile-pop">
+            <div v-if="isConfirmModalOpen" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+                <div class="bg-[#f6dff2] border-[5px] border-[#b35cb8] rounded-[32px] p-6 shadow-2xl flex flex-col items-center gap-4 w-[340px]">
+                    <span class="text-4xl">⚠️</span>
+                    <h3 class="text-[#50216b] font-black text-xl text-center">
+                        {{ isHost ? '방 해체 확인' : '대기실 나가기' }}
+                    </h3>
+                    <p class="text-[#723a92] font-bold text-sm text-center">
+                        {{ isHost ? '방을 해체하고 나가시겠습니까?' : '정말로 대기실에서 나가시겠습니까?' }}
+                    </p>
+
+                    <div class="flex gap-3 w-full mt-2">
+                        <button 
+                            @click="isConfirmModalOpen = false" 
+                            class="flex-1 bg-gray-400 hover:bg-gray-500 border-[3px] border-gray-600 text-white font-black text-base py-2 rounded-2xl transition active:scale-95"
+                        >
+                            취소
+                        </button>
+                        <button 
+                            @click="confirmLeaveOrDisband" 
+                            class="flex-1 bg-red-400 hover:bg-red-500 border-[3px] border-red-700 text-white font-black text-base py-2 rounded-2xl transition active:scale-95"
+                        >
+                            퇴장
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Transition>
+
     </div>
 </template>
 
@@ -189,6 +220,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { Head, usePage, router } from '@inertiajs/vue3';
 
+// Props 정의
 const props = defineProps({
     lobbyCode:      { type: String, required: true },
     lobbyId:        [String, Number],
@@ -207,6 +239,7 @@ const props = defineProps({
 
 const page = usePage();
 
+// 반응형 상태값
 const isChatEnabled       = ref(props.chatEnabled);
 const isInviteModalOpen   = ref(false);
 const generatedInviteCode = ref('');
@@ -217,8 +250,10 @@ const chatContainer       = ref(null);
 const activePlayers       = ref([...props.initialPlayers]);
 const messages            = ref([]);
 const isDisbanded         = ref(false);
-const selectedPlayer      = ref(null); // 팝업으로 볼 플레이어
+const selectedPlayer      = ref(null);
+const isConfirmModalOpen  = ref(false);
 
+// 계산된 프로퍼티 (Computed)
 const userNickname = computed(() =>
     props.nickname || page.props?.auth?.user?.name || '플레이어'
 );
@@ -231,6 +266,7 @@ const readyCount   = computed(() =>
     activePlayers.value.filter(p => p.is_host || p.is_ready).length
 );
 
+// 슬롯 스타일 바인딩 함수
 const getSlotClass = (index) => {
     const p = activePlayers.value[index];
     if (!p) return 'bg-[#956ca6]/40 border-dashed border-[#865996]';
@@ -239,6 +275,7 @@ const getSlotClass = (index) => {
     return 'bg-[#9e82b8] border-purple-300 shadow-md';
 };
 
+// 웹소켓 이벤트 바인딩 (Laravel Echo)
 let echoChannel = null;
 
 onMounted(() => {
@@ -248,7 +285,7 @@ onMounted(() => {
                 activePlayers.value.push({
                     nickname:       e.nickname,
                     avatar:         e.avatar || '/images/profile.png',
-                    status_message: e.status_message || '', // 추가
+                    status_message: e.status_message || '', 
                     is_host:        e.is_host,
                     is_ready:       false,
                     session_id:     e.session_id,
@@ -257,14 +294,12 @@ onMounted(() => {
         })
         .listen('.player.left', (e) => {
             activePlayers.value = activePlayers.value.filter(p => p.session_id !== e.session_id);
-            // 팝업 열려있으면 닫기
             if (selectedPlayer.value?.session_id === e.session_id) selectedPlayer.value = null;
         })
         .listen('.player.ready', (e) => {
             const player = activePlayers.value.find(p => p.session_id === e.session_id);
             if (player) {
                 player.is_ready = e.is_ready;
-                // 팝업 중이면 즉시 반영
                 if (selectedPlayer.value?.session_id === e.session_id) {
                     selectedPlayer.value = { ...player };
                 }
@@ -290,6 +325,7 @@ onUnmounted(() => {
     window.removeEventListener('beforeunload', handleBeforeUnload);
 });
 
+// 이탈 / 이벤드 핸들러
 const handleBeforeUnload = () => {
     const token = document.querySelector('meta[name="csrf-token"]')?.content;
     navigator.sendBeacon(
@@ -298,6 +334,7 @@ const handleBeforeUnload = () => {
     );
 };
 
+// 채팅 / 액션 메서드
 const sendMessage = async () => {
     const msg = chatInput.value.trim();
     if (!msg || !isChatEnabled.value) return;
@@ -334,6 +371,7 @@ const toggleReady = async () => {
     }
 };
 
+// 초대 / 퇴장 처리
 const generateInviteCode = () => { generatedInviteCode.value = props.lobbyCode; };
 
 const copyInviteCode = async () => {
@@ -344,9 +382,8 @@ const copyInviteCode = async () => {
     } catch { copied.value = false; }
 };
 
-const leaveOrDisbandLobby = async () => {
-    const msg = props.isHost ? '방을 해체하고 나가시겠습니까?' : '대기실에서 나가시겠습니까?';
-    if (!confirm(msg)) return;
+const confirmLeaveOrDisband = async () => {
+    isConfirmModalOpen.value = false;
     try {
         await window.axios.delete(`/lobby/${props.lobbyCode}/leave`, { data: { isHost: props.isHost } });
     } finally {
@@ -356,6 +393,7 @@ const leaveOrDisbandLobby = async () => {
 </script>
 
 <style scoped>
+/* 커스텀 스크롤바 및 팝업 트랜지션 */
 .custom-scroll::-webkit-scrollbar { width: 6px; }
 .custom-scroll::-webkit-scrollbar-track { background: transparent; }
 .custom-scroll::-webkit-scrollbar-thumb { background-color: #865bc6; border-radius: 9999px; }
