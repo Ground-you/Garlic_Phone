@@ -29,7 +29,7 @@ class GameController extends Controller
         // 게임 상태 없으면 새로 생성 (첫 진입한 사람 기준)
         $state = GameState::firstOrCreate(
             ['lobby_code' => $code],
-            ['current_round' => 0, 'total_rounds' => count($players)]
+            ['current_round' => 0, 'total_rounds' => count($players) + 1]
         );
 
         $roundData = $this->buildRoundData($code, $sessionId, $players, $state);
@@ -156,7 +156,7 @@ class GameController extends Controller
     {
         $index = collect($players)->search(fn($p) => $p['session_id'] === $mySessionId);
         $totalPlayers = count($players);
-        $prevIndex = ($index - $round + $totalPlayers) % $totalPlayers;
+        $prevIndex = ($index - 1 + $totalPlayers) % $totalPlayers;
         $prevSessionId = $players[$prevIndex]['session_id'];
 
         return GameSubmission::where('lobby_code', $lobbyCode)
