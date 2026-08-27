@@ -332,7 +332,7 @@ onMounted(() => {
         })
         .listen('.game.ended', () => {
             router.visit(`/lobby/${props.lobbyCode}`);
-        })
+        });
 });
 
 onUnmounted(() => {
