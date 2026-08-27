@@ -23,15 +23,50 @@
                 <div class="flex flex-wrap items-center gap-2">
                     <div class="bg-[#a482cc] border-[3px] border-[#703b96] rounded-2xl px-5 py-2 text-white font-black text-sm">모드: {{ modeText }}</div>
                     <div class="bg-[#a482cc] border-[3px] border-[#703b96] rounded-2xl px-5 py-2 text-white font-black text-sm">시간: {{ timeLimit }}초</div>
-                    <div class="bg-[#a482cc] border-[3px] border-[#703b96] rounded-2xl px-5 py-2 text-white font-black text-sm">인원: {{ submittedCount }} / {{ maxPlayers }}</div>
+                    <div class="bg-[#a482cc] border-[3px] border-[#703b96] rounded-2xl px-5 py-2 text-white font-black text-sm">라운드: {{ round.round + 1 }} / {{ round.totalRounds }}</div>
                 </div>
             </div>
 
-            <!-- 본문: 플레이어 목록 + 주제 정하기 -->
-            <div class="flex-1 flex flex-col lg:flex-row gap-5 mb-5">
+            <!-- 게임 종료 화면 -->
+            <div v-if="round.finished" class="flex-1 flex flex-col items-center gap-4 text-white overflow-hidden">
+                <p class="font-black text-xl mt-2">🎉 결과 보기</p>
+
+                <div v-if="chains.length" class="w-full flex flex-col items-center gap-3 flex-1 overflow-hidden">
+                    <!-- 체인 선택 탭 -->
+                    <div class="flex gap-2 flex-wrap justify-center">
+                        <button v-for="(chain, i) in chains" :key="i"
+                            @click="activeChain = i"
+                            :class="activeChain === i ? 'bg-white text-[#42215c]' : 'bg-white/20 text-white'"
+                            class="px-4 py-1.5 rounded-full font-black text-xs transition">
+                            {{ chain.starter }}의 체인
+                        </button>
+                    </div>
+
+                    <!-- 선택된 체인의 스텝들 -->
+                    <div class="flex-1 w-full overflow-y-auto custom-scroll px-2">
+                        <div class="flex flex-col gap-3 max-w-md mx-auto">
+                            <div v-for="step in chains[activeChain].steps" :key="step.round"
+                                class="bg-[#a57cb8] border-2 border-[#703b96] rounded-2xl p-3">
+                                <p class="text-purple-200 text-[10px] font-bold mb-1">{{ step.author }} · {{ step.round + 1 }}번째</p>
+                                <p v-if="step.type === 'text'" class="text-white font-bold text-sm">{{ step.content }}</p>
+                                <img v-else :src="step.content" class="w-full rounded-xl bg-white" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button v-if="isHost" @click="returnToLobby"
+                    class="bg-[#d3aade] hover:bg-[#c39ac7] border-[3px] border-[#703b96] text-[#42215c] font-black text-base px-8 py-3 rounded-xl transition-transform active:scale-95 mb-2">
+                    대기방으로 돌아가기
+                </button>
+                <p v-else class="text-white/70 font-bold text-xs mb-2">방장이 대기방으로 이동시킬 때까지 기다려 주세요.</p>
+            </div>
+
+            <!-- 본문: 플레이어 목록 + 라운드 콘텐츠 -->
+            <div v-else class="flex-1 flex flex-col lg:flex-row gap-5 mb-5">
 
                 <!-- 플레이어 목록 -->
-                <div class="lg:w-[300px] bg-[#a57cb8] border-[3px] border-[#703b96] rounded-2xl pt-10 p-4 relative shadow-inner">
+                <div class="lg:w-[280px] bg-[#a57cb8] border-[3px] border-[#703b96] rounded-2xl pt-10 p-4 relative shadow-inner">
                     <div class="absolute -top-[3px] left-6 bg-[#8a4a9e] border-x-[3px] border-b-[3px] border-[#703b96] text-white font-black text-sm px-6 py-1.5 rounded-b-xl">
                         플레이어 목록
                     </div>
@@ -50,53 +85,73 @@
                     </div>
                 </div>
 
-                <!-- 주제 정하기 -->
-                <div class="flex-1 bg-[#a57cb8] border-[3px] border-[#703b96] rounded-2xl pt-10 p-6 relative shadow-inner flex flex-col items-center">
+                <!-- 라운드 콘텐츠: 텍스트 입력 -->
+                <div v-if="round.type === 'text'" class="flex-1 bg-[#a57cb8] border-[3px] border-[#703b96] rounded-2xl pt-10 p-6 relative shadow-inner flex flex-col items-center">
                     <div class="absolute -top-[3px] left-6 bg-[#8a4a9e] border-x-[3px] border-b-[3px] border-[#703b96] text-white font-black text-sm px-6 py-1.5 rounded-b-xl">
-                        주제 정하기
+                        {{ round.round === 0 ? '주제 정하기' : '설명 작성하기' }}
                     </div>
 
-                    <!-- 마스코트 -->
-                    <div class="relative mt-2 mb-4">
-                        <svg viewBox="0 0 100 110" class="w-24 h-24 drop-shadow-md">
-                            <ellipse cx="50" cy="65" rx="32" ry="38" fill="#ffffff" stroke="#c9a0dc" stroke-width="4"/>
-                            <path d="M35 30 Q50 5 65 30" fill="none" stroke="#c9a0dc" stroke-width="4" stroke-linecap="round"/>
-                            <circle cx="40" cy="65" r="4" fill="#5c2e80"/>
-                            <circle cx="60" cy="65" r="4" fill="#5c2e80"/>
-                            <path d="M42 78 Q50 84 58 78" fill="none" stroke="#5c2e80" stroke-width="3" stroke-linecap="round"/>
-                        </svg>
-                        <div class="absolute -top-3 -right-6 bg-white border-2 border-[#c9a0dc] rounded-full w-9 h-9 flex items-center justify-center shadow">
-                            <span class="text-[#8a429b] font-black">?</span>
-                        </div>
+                    <!-- 0라운드가 아니면 이전 사람 그림을 보여줌 -->
+                    <div v-if="round.previousContent" class="w-full max-w-md mb-4 mt-4">
+                        <p class="text-[#42215c] font-bold text-xs text-center mb-2">이 그림을 보고 설명을 적어주세요</p>
+                        <img :src="round.previousContent" class="w-full border-[3px] border-[#8a429b] rounded-2xl bg-white" />
                     </div>
-
-                    <p class="text-[#42215c] font-black text-sm text-center">다음 플레이어에게 넘겨줄 주제를 선정해 보아요.</p>
-                    <p class="text-[#6b3f80] font-bold text-xs text-center mb-4">EX) 산타를 하는 루돌프</p>
+                    <template v-else>
+                        <p class="text-[#42215c] font-black text-sm text-center mt-4">다음 플레이어에게 넘겨줄 주제를 선정해 보아요.</p>
+                        <p class="text-[#6b3f80] font-bold text-xs text-center mb-4">EX) 산타를 타는 루돌프</p>
+                    </template>
 
                     <textarea
-                        v-model="topicInput"
-                        :disabled="hasSubmitted"
+                        v-model="textInput"
+                        :disabled="round.hasSubmitted"
                         maxlength="60"
-                        placeholder="주제를 적어주세요. 공백으로 넘기면 자동으로 정해집니다."
+                        placeholder="내용을 적어주세요. 공백으로 넘기면 자동으로 정해집니다."
                         class="w-full max-w-md bg-white/90 border-[3px] border-[#8a429b] rounded-2xl px-4 py-3 text-sm font-bold text-[#42215c] outline-none focus:border-[#5c2e80] disabled:opacity-50 resize-none h-20"
                     ></textarea>
+                </div>
+
+                <!-- 라운드 콘텐츠: 그림 그리기 -->
+                <div v-else class="flex-1 bg-[#a57cb8] border-[3px] border-[#703b96] rounded-2xl pt-10 p-4 relative shadow-inner flex flex-col items-center">
+                    <div class="absolute -top-[3px] left-6 bg-[#8a4a9e] border-x-[3px] border-b-[3px] border-[#703b96] text-white font-black text-sm px-6 py-1.5 rounded-b-xl">
+                        그림 그리기
+                    </div>
+
+                    <div class="w-full bg-[#fff5fe] border-[3px] border-[#8a429b] rounded-2xl px-4 py-2 mt-3 mb-3 text-center">
+                        <p class="text-[#42215c] font-black text-sm">주제: {{ round.previousContent }}</p>
+                    </div>
+
+                    <!-- 툴바 -->
+                    <div class="flex items-center gap-3 mb-3">
+                        <input type="color" v-model="brushColor" :disabled="round.hasSubmitted" class="w-9 h-9 rounded-lg border-2 border-[#703b96] cursor-pointer disabled:opacity-50" />
+                        <input type="range" min="1" max="20" v-model="brushSize" :disabled="round.hasSubmitted" class="w-24" />
+                        <button @click="undo" :disabled="round.hasSubmitted" class="bg-[#d3aade] border-2 border-[#703b96] text-[#42215c] font-black text-xs px-3 py-2 rounded-lg disabled:opacity-50">되돌리기</button>
+                        <button @click="clearCanvas" :disabled="round.hasSubmitted" class="bg-[#d3aade] border-2 border-[#703b96] text-[#42215c] font-black text-xs px-3 py-2 rounded-lg disabled:opacity-50">전체 지우기</button>
+                    </div>
+
+                    <canvas
+                        ref="canvasRef"
+                        width="600" height="320"
+                        class="bg-white rounded-xl border-[3px] border-[#8a429b] touch-none"
+                        @mousedown="startDraw" @mousemove="draw" @mouseup="endDraw" @mouseleave="endDraw"
+                        @touchstart.prevent="startDrawTouch" @touchmove.prevent="drawTouch" @touchend.prevent="endDraw"
+                    ></canvas>
                 </div>
             </div>
 
             <!-- 하단: 완료 현황 + 타이머 + 완료 버튼 -->
-            <div class="flex flex-wrap gap-4 w-full">
+            <div v-if="!round.finished" class="flex flex-wrap gap-4 w-full">
                 <div class="flex-1 min-w-[150px] bg-[#bfa2db]/40 border-[3px] border-[#703b96] text-[#42215c] font-black text-base py-3 rounded-xl flex items-center justify-center shadow-inner">
-                    완료된 플레이어: {{ submittedCount }} / {{ maxPlayers }}
+                    완료된 플레이어: {{ round.submittedCount }} / {{ round.totalPlayers }}
                 </div>
                 <div class="flex-1 min-w-[150px] bg-[#bfa2db]/40 border-[3px] border-[#703b96] text-[#42215c] font-black text-base py-3 rounded-xl flex items-center justify-center shadow-inner">
                     남은 시간: {{ timeLeft }} / {{ timeLimit }}
                 </div>
                 <button
-                    @click="submitTopic"
-                    :disabled="hasSubmitted"
+                    @click="handleSubmit"
+                    :disabled="round.hasSubmitted"
                     class="flex-1 min-w-[130px] bg-[#d3aade] hover:bg-[#c39ac7] border-[3px] border-[#703b96] text-[#42215c] font-black text-base py-3 rounded-xl transition-transform active:scale-95 disabled:opacity-50"
                 >
-                    {{ hasSubmitted ? '제출 완료!' : '완료' }}
+                    {{ round.hasSubmitted ? '제출 완료!' : '완료' }}
                 </button>
             </div>
         </div>
@@ -104,43 +159,159 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { Head } from '@inertiajs/vue3';
 
 const props = defineProps({
-    lobbyCode:      { type: String, required: true },
-    mySessionId:    { type: String, default: '' },
-    nickname:       { type: String, default: '플레이어' },
-    avatar:         { type: String, default: '/images/profile.png' },
-    isHost:         { type: Boolean, default: false },
-    mode:           { type: String, default: 'normal' },
-    maxPlayers:     { type: Number, default: 8 },
-    timeLimit:      { type: Number, default: 40 },
-    players:        { type: Array, default: () => [] },
-    submittedCount: { type: Number, default: 0 },
-    submittedSessions: { type: Array, default: () => [] },
+    lobbyCode:   { type: String, required: true },
+    mySessionId: { type: String, default: '' },
+    nickname:    { type: String, default: '플레이어' },
+    avatar:      { type: String, default: '/images/profile.png' },
+    isHost:      { type: Boolean, default: false },
+    mode:        { type: String, default: 'normal' },
+    timeLimit:   { type: Number, default: 40 },
+    players:     { type: Array, default: () => [] },
+    round:       { type: Object, required: true },
 });
 
-const modeText        = computed(() => props.mode === 'normal' ? '일반' : props.mode);
-const topicInput       = ref('');
-const hasSubmitted     = ref(false);
-const submittedCount   = ref(props.submittedCount);
-const submittedSessions = ref(new Set(props.submittedSessions));
-const timeLeft         = ref(props.timeLimit);
+const modeText = computed(() => props.mode === 'normal' ? '일반' : props.mode);
 
+// round 데이터를 반응형으로 다루기 위해 로컬 상태로 복사
+const round = ref({ ...props.round });
+const submittedSessions = ref(new Set(props.round.submittedSessions || []));
+const textInput = ref('');
+const timeLeft = ref(props.timeLimit);
+
+// ── 그림 그리기 관련 ──
+const canvasRef = ref(null);
+const brushColor = ref('#000000');
+const brushSize = ref(4);
+let ctx = null;
+let isDrawing = false;
+let strokes = []; // undo용 스냅샷 저장
+
+const initCanvas = () => {
+    if (!canvasRef.value) return;
+    ctx = canvasRef.value.getContext('2d');
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvasRef.value.width, canvasRef.value.height);
+    strokes = [];
+};
+
+const saveSnapshot = () => {
+    if (!ctx || !canvasRef.value) return;
+    strokes.push(ctx.getImageData(0, 0, canvasRef.value.width, canvasRef.value.height));
+    if (strokes.length > 30) strokes.shift();
+};
+
+const getPos = (e) => {
+    const rect = canvasRef.value.getBoundingClientRect();
+    const scaleX = canvasRef.value.width / rect.width;
+    const scaleY = canvasRef.value.height / rect.height;
+    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+};
+
+const startDraw = (e) => {
+    if (round.value.hasSubmitted) return;
+    saveSnapshot();
+    isDrawing = true;
+    const { x, y } = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+};
+const draw = (e) => {
+    if (!isDrawing) return;
+    const { x, y } = getPos(e);
+    ctx.strokeStyle = brushColor.value;
+    ctx.lineWidth = brushSize.value;
+    ctx.lineTo(x, y);
+    ctx.stroke();
+};
+const endDraw = () => { isDrawing = false; };
+
+const startDrawTouch = (e) => startDraw(e.touches[0]);
+const drawTouch = (e) => draw(e.touches[0]);
+
+const undo = () => {
+    if (strokes.length === 0) return;
+    const last = strokes.pop();
+    ctx.putImageData(last, 0, 0);
+};
+const clearCanvas = () => {
+    saveSnapshot();
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvasRef.value.width, canvasRef.value.height);
+};
+
+// ── 타이머 ──
 let timerInterval = null;
+const resetTimer = () => {
+    clearInterval(timerInterval);
+    timeLeft.value = props.timeLimit;
+    timerInterval = setInterval(() => {
+        if (timeLeft.value > 0) timeLeft.value--;
+        if (timeLeft.value === 0 && !round.value.hasSubmitted) handleSubmit();
+    }, 1000);
+};
+
+// ── 라운드 데이터 새로고침 (다른 사람이 다 제출해서 라운드가 바뀌었을 때) ──
+const refreshRound = async () => {
+    const res = await window.axios.get(`/game/${props.lobbyCode}/round`);
+    round.value = res.data;
+    submittedSessions.value = new Set(res.data.submittedSessions || []);
+    textInput.value = '';
+    resetTimer();
+    if (res.data.type === 'drawing') {
+        await nextTick();
+        initCanvas();
+    }
+};
+
+// ── 제출 ──
+const handleSubmit = async () => {
+    if (round.value.hasSubmitted) return;
+
+    let content = '';
+    if (round.value.type === 'text') {
+        content = textInput.value.trim();
+    } else {
+        content = canvasRef.value.toDataURL('image/png');
+    }
+
+    round.value.hasSubmitted = true; // 낙관적 업데이트
+
+    try {
+        const res = await window.axios.post(`/game/${props.lobbyCode}/submit`, {
+            round: round.value.round,
+            type: round.value.type,
+            content,
+        });
+        round.value.submittedCount = res.data.submitted;
+        submittedSessions.value.add(props.mySessionId);
+    } catch (e) {
+        round.value.hasSubmitted = false;
+        console.error('제출 실패:', e);
+    }
+};
+
 let echoChannel = null;
 
 onMounted(() => {
-    timerInterval = setInterval(() => {
-        if (timeLeft.value > 0) timeLeft.value--;
-        if (timeLeft.value === 0 && !hasSubmitted.value) submitTopic();
-    }, 1000);
+    resetTimer();
+    if (round.value.type === 'drawing') {
+        nextTick(() => initCanvas());
+    }
 
     echoChannel = window.Echo.channel(`game.${props.lobbyCode}`)
         .listen('.topic.submitted', (e) => {
-            submittedCount.value = e.submitted_count;
-            submittedSessions.value.add(e.session_id);
+            // 실시간 제출 카운트만 우선 반영 (같은 라운드일 때)
+            round.value.submittedCount = e.submitted_count;
+            if (e.session_id) submittedSessions.value.add(e.session_id);
+        })
+        .listen('.round.advanced', () => {
+            refreshRound();
         });
 });
 
@@ -148,21 +319,6 @@ onUnmounted(() => {
     clearInterval(timerInterval);
     window.Echo.leaveChannel(`game.${props.lobbyCode}`);
 });
-
-const submitTopic = async () => {
-    if (hasSubmitted.value) return;
-    hasSubmitted.value = true;
-    try {
-        const res = await window.axios.post(`/game/${props.lobbyCode}/submit-topic`, {
-            content: topicInput.value.trim(),
-        });
-        submittedCount.value = res.data.submitted;
-        submittedSessions.value.add(props.mySessionId);
-    } catch (e) {
-        hasSubmitted.value = false;
-        console.error('주제 제출 실패:', e);
-    }
-};
 </script>
 
 <style scoped>

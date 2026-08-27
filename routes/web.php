@@ -56,6 +56,9 @@ Route::delete('/lobby/{code}/leave', [LobbyController::class, 'leave'])->name('l
 Route::patch('/lobby/{code}/ready', [LobbyController::class, 'ready'])->name('lobby.ready');
 Route::post('/lobby/{code}/start', [LobbyController::class, 'start'])->name('lobby.start');
 Route::get('/game/{code}', [GameController::class, 'show'])->name('game.show');
-Route::post('/game/{code}/submit-topic', [GameController::class, 'submitTopic'])->name('game.submit-topic');
+Route::get('/game/{code}/round', [GameController::class, 'roundData'])->name('game.round');
+Route::post('/game/{code}/submit', [GameController::class, 'submit'])->name('game.submit');
+Route::get('/game/{code}/results', [GameController::class, 'results'])->name('game.results');
+Route::post('/game/{code}/return-to-lobby', [GameController::class, 'returnToLobby'])->name('game.return-to-lobby');
 
 require __DIR__.'/auth.php';
