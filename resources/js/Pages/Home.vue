@@ -3,21 +3,24 @@
 
     <div class="min-h-screen bg-gradient-to-br from-[#caaae6] via-[#bfa2db] to-[#e4d4f7] flex items-center justify-center p-6 relative overflow-hidden select-none">
         
+        <!-- 배경 패턴 및 장식 -->
         <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#865bc6 2.4px, transparent 1.8px); background-size: 28px 28px;"></div>
-
         <div class="absolute w-72 h-72 bg-white/10 rounded-full blur-md top-[-10%] left-[-5%]"></div>
         <div class="absolute w-96 h-96 bg-pink-300/10 rounded-full blur-md bottom-[-10%] right-[-5%]"></div>
 
+        <!-- 메인 컨테이너 -->
         <div 
             class="w-full max-w-7xl min-h-[650px] bg-[#dfcef2]/95 border-[4px] border-[#e953a8] rounded-3xl p-10 shadow-2xl relative z-10 flex flex-col md:flex-row gap-12 justify-between items-stretch transition-all duration-300 ease-out animate-pop-in"
-            :class="{ 'scale-[0.98] opacity-60 pointer-events-none': isModalOpen }"
+            :class="{ 'scale-[0.98] opacity-60 pointer-events-none': isModalOpen || isJoinModalOpen || isLogoutModalOpen }"
         >
             
+            <!-- 좌측 영역: 로고, 프로필, 게임 안내 -->
             <div class="w-full md:w-[45%] flex flex-col justify-between">
                 <div class="flex justify-start -mt-10 -ml-10 mb-12">
                     <img src="/images/logo.png" alt="Garlic Phone Logo" class="w-44 h-44 object-contain drop-shadow-md hover:scale-105 hover:rotate-1 transition-transform duration-200" />
                 </div>
 
+                <!-- 프로필 카드 및 닉네임 입력 -->
                 <div class="relative flex items-center w-full pl-6" v-click-outside="() => isProfileCardOpen = false">
                     <div class="w-full bg-[#bfa2db] border-[4px] border-[#865bc6] rounded-2xl p-1.5 shadow-sm">
                         <input 
@@ -42,7 +45,6 @@
 
                     <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleProfileChange" />
 
-                    <!-- ✅ @file-selected 추가 -->
                     <ProfileCard
                         :isOpen="isProfileCardOpen"
                         :nickname="nickname"
@@ -57,6 +59,7 @@
                     />
                 </div>
 
+                <!-- 플레이 방법 섹션 -->
                 <div class="flex-1 bg-[#bfa2db] border-[4px] border-[#865bc6] rounded-3xl relative mt-10 pt-12 p-6 shadow-inner flex flex-col">
                     <div class="absolute -top-4 left-6 bg-[#865bc6] text-white font-extrabold px-5 py-1.5 rounded-xl text-sm shadow-md">
                         플레이 방법
@@ -69,8 +72,10 @@
                 </div>
             </div>
 
+            <!-- 우측 영역: 탭 메뉴 및 메인 설정 -->
             <div class="w-full md:w-[50%] flex flex-col justify-between pt-6">
                 <div class="flex flex-col w-full">
+                    <!-- 상단 탭 헤더 -->
                     <div class="flex gap-1 pl-4 relative z-20">
                         <button 
                             @click="activeTab = 'mode'"
@@ -95,8 +100,10 @@
                         </button>
                     </div>
 
+                    <!-- 탭 컨텐츠 바디 -->
                     <div class="custom-scroll bg-[#bfa2db] border-[4px] border-[#865bc6] rounded-3xl p-6 shadow-inner w-full h-[520px] min-h-[520px] overflow-y-auto relative z-10 flex flex-col">
                         <Transition name="fade" mode="out-in">
+                            <!-- 1. 모드 선택 탭 -->
                             <div v-if="activeTab === 'mode'" key="mode" class="space-y-4 w-full flex flex-col">
                                 <div 
                                     v-for="mode in modes" 
@@ -120,13 +127,14 @@
                                 </div>
                             </div>
                             
+                            <!-- 2. 환경 설정 탭 -->
                             <div v-else-if="activeTab === 'setting'" key="setting" class="flex-1 w-full flex items-center justify-center text-center text-white font-black text-2xl px-4">
                                 사운드 및 시스템 설정이 추가될 예정입니다.
                             </div>
 
+                            <!-- 3. 디스코드 계정 탭 -->
                             <div v-else-if="activeTab === 'account'" key="account" class="flex-1 w-full flex flex-col items-center justify-center p-4">
                                 <div class="w-full max-w-md flex flex-col items-center select-none">
-                                    
                                     <div class="flex items-center justify-center w-full max-w-[340px] h-35 mb-1 mr-5">
                                         <img src="/images/discord_logo_full.png" alt="Discord Full Logo" class="h-full w-auto object-contain" />
                                     </div>
@@ -159,22 +167,22 @@
                                         </div>
 
                                         <button 
-                                            @click="handleLogout"
+                                            @click="isLogoutModalOpen = true"
                                             class="w-full max-w-[320px] bg-[#685370] hover:bg-[#584460] border-b-4 border-[#4a3850] text-white font-black text-3xl py-4 rounded-2xl shadow-lg transition-all duration-150 transform active:scale-[0.98] tracking-wider"
                                         >
                                             로그아웃
                                         </button>
                                     </div>
-
                                 </div>
                             </div>
                         </Transition>
                     </div>
                 </div>
 
+                <!-- 하단 액션 버튼 (입장/생성) -->
                 <div class="flex gap-4 w-full mt-6">
                     <button 
-                        @click="handleJoinRoom"
+                        @click="handleOpenJoinModal"
                         :disabled="!isNicknameValid || isLoading"
                         :class="[isNicknameValid && !isLoading ? 'bg-[#bfa2db] hover:bg-[#b090cf] border-[#865bc6] text-[#55328a] cursor-pointer active:scale-[0.98]' : 'bg-purple-300/50 border-purple-400 text-purple-400 opacity-60 cursor-not-allowed']"
                         class="flex-1 border-[4px] font-black text-2xl py-4 rounded-2xl shadow-md transition-all duration-200"
@@ -193,6 +201,7 @@
             </div>
         </div>
 
+        <!-- 커스텀 모달 목록 -->
         <LobbySetting 
             v-if="isModalOpen"
             :isOpen="isModalOpen" 
@@ -200,10 +209,77 @@
             @confirm="handleCreateRoom" 
         />
 
+        <!-- 1. 파티 초대 코드 입력 모달 -->
+        <Transition name="fade">
+            <div v-if="isJoinModalOpen" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+                <div class="bg-[#f6dff2] border-[5px] border-[#b35cb8] rounded-[32px] p-6 shadow-2xl w-full max-w-md relative flex flex-col items-center gap-4">
+                    <div class="absolute -top-[22px] bg-[#97479c] border-[3px] border-[#b35cb8] text-white font-black px-8 py-1.5 rounded-2xl text-base shadow-md">
+                        파티 초대 코드 입력
+                    </div>
+                    
+                    <p class="text-[#50216b] font-bold text-sm mt-4 text-center">
+                        전달받은 로비 초대 코드를 입력해 주세요.
+                    </p>
+
+                    <input 
+                        v-model="inputRoomCode" 
+                        @keyup.enter="confirmJoinRoom"
+                        type="text" 
+                        maxlength="10"
+                        placeholder="초대 코드 입력..." 
+                        class="w-full bg-white border-[3px] border-[#b35cb8] rounded-2xl px-4 py-3 text-center text-[#50216b] font-black text-xl outline-none focus:ring-4 ring-purple-300 transition"
+                    />
+
+                    <div class="flex gap-3 w-full mt-2">
+                        <button 
+                            @click="isJoinModalOpen = false" 
+                            class="flex-1 bg-gray-400 hover:bg-gray-500 border-[3px] border-gray-600 text-white font-black text-lg py-2.5 rounded-2xl transition active:scale-95"
+                        >
+                            취소
+                        </button>
+                        <button 
+                            @click="confirmJoinRoom" 
+                            :disabled="!inputRoomCode.trim() || isLoading"
+                            class="flex-1 bg-[#ca8fe2] hover:bg-[#b57dcd] border-[3px] border-[#b35cb8] text-white font-black text-lg py-2.5 rounded-2xl transition active:scale-95 disabled:opacity-50"
+                        >
+                            {{ isLoading ? '입장 중...' : '확인' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Transition>
+
+        <!-- 2. 로그아웃 확인 모달 -->
+        <Transition name="fade">
+            <div v-if="isLogoutModalOpen" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+                <div class="bg-[#f6dff2] border-[5px] border-[#b35cb8] rounded-[32px] p-6 shadow-2xl flex flex-col items-center gap-4 w-[320px]">
+                    <span class="text-4xl">🔒</span>
+                    <h3 class="text-[#50216b] font-black text-xl text-center">로그아웃</h3>
+                    <p class="text-[#723a92] font-bold text-sm text-center">정말로 로그아웃 하시겠습니까?</p>
+
+                    <div class="flex gap-3 w-full mt-2">
+                        <button 
+                            @click="isLogoutModalOpen = false" 
+                            class="flex-1 bg-gray-400 hover:bg-gray-500 border-[3px] border-gray-600 text-white font-black text-base py-2 rounded-2xl transition active:scale-95"
+                        >
+                            취소
+                        </button>
+                        <button 
+                            @click="confirmLogout" 
+                            class="flex-1 bg-red-400 hover:bg-red-500 border-[3px] border-red-700 text-white font-black text-base py-2 rounded-2xl transition active:scale-95"
+                        >
+                            로그아웃
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Transition>
+
     </div>
 </template>
 
 <style scoped>
+/* 애니메이션 및 스타일 정의 */
 @keyframes popIn {
     0% { transform: scale(0.97); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
@@ -217,7 +293,7 @@
 .custom-scroll::-webkit-scrollbar { width: 8px; }
 .custom-scroll::-webkit-scrollbar-track { background: transparent; }
 .custom-scroll::-webkit-scrollbar-thumb { background-color: #865bc6; border-radius: 9999px; }
-input::placeholder { color: rgba(255, 255, 255, 0.6); }
+input::placeholder { color: rgba(134, 91, 198, 0.6); }
 </style>
 
 <script setup>
@@ -226,6 +302,7 @@ import { Head, usePage, router } from '@inertiajs/vue3';
 import LobbySetting from './lobbySetting.vue';
 import ProfileCard from './ProfileCard.vue';
 
+// Props 및 전역 상태 설정
 const props = defineProps({
     defaultNickname: String,
     modes: Array,
@@ -234,19 +311,24 @@ const props = defineProps({
 const page = usePage();
 const auth = computed(() => page.props?.auth || { user: null });
 
-const nickname        = ref(props.defaultNickname || '');
-const selectedMode    = ref('normal');
-const activeTab       = ref('mode');
-const profilePreview  = ref('/images/profile.png');
-const profileFile     = ref(null);   // 실제 File 객체 보관
-const selectedFile    = ref(null);
-const fileInput       = ref(null);
-const isModalOpen     = ref(false);
+// 컴포넌트 반응형 상태 (Ref)
+const nickname          = ref(props.defaultNickname || '');
+const selectedMode      = ref('normal');
+const activeTab         = ref('mode');
+const profilePreview    = ref('/images/profile.png');
+const profileFile       = ref(null);
+const selectedFile      = ref(null);
+const fileInput         = ref(null);
+const isModalOpen       = ref(false);
 const isProfileCardOpen = ref(false);
-const statusMessage   = ref('');
-const isLoading       = ref(false);  // 업로드 중 버튼 비활성화용
+const statusMessage     = ref('');
+const isLoading         = ref(false);
 
-// ── Auth 동기화 ───────────────────────────────────────
+const isJoinModalOpen   = ref(false);
+const inputRoomCode     = ref('');
+const isLogoutModalOpen = ref(false);
+
+// 인증 유저 동기화
 const syncAuthUser = () => {
     if (auth.value && auth.value.user) {
         nickname.value = auth.value.user.name || '';
@@ -260,7 +342,7 @@ const syncAuthUser = () => {
 onMounted(() => { syncAuthUser(); });
 watch(auth, () => { syncAuthUser(); }, { deep: true, immediate: true });
 
-// ── 파일 입력 (구형 fileInput ref용, 현재 ProfileCard에서 처리) ──
+// 프로필 이미지 바인딩
 const triggerFileInput   = () => { fileInput.value?.click(); };
 const handleProfileChange = (event) => {
     const file = event.target.files[0];
@@ -271,16 +353,14 @@ const handleProfileChange = (event) => {
     }
 };
 
-// ── 유효성 ─────────────────────────────────────────────
+// 유효성 계산 프로퍼티
 const isNicknameValid = computed(() =>
     nickname.value && nickname.value.trim().length > 0
 );
 
-// ── 아바타 업로드 (blob URL → 서버 URL 변환) ──────────
+// 아바타 파일 업로드 처리
 const uploadAvatarIfNeeded = async () => {
-    // Discord 유저이거나 파일 선택 안 했으면 현재 URL 그대로 사용
     if (!profileFile.value) return profilePreview.value;
-    // 이미 서버 URL이면 그대로 사용
     if (!profilePreview.value.startsWith('blob:')) return profilePreview.value;
 
     const formData = new FormData();
@@ -299,7 +379,7 @@ const uploadAvatarIfNeeded = async () => {
     }
 };
 
-// ── 방 생성 (아바타 업로드 후 POST) ─────────────────
+// 방 생성 이벤트
 const handleCreateRoom = async (settings) => {
     isModalOpen.value = false;
     isLoading.value   = true;
@@ -319,16 +399,22 @@ const handleCreateRoom = async (settings) => {
     }
 };
 
-// ── 방 입장 (아바타 업로드 후 GET with data) ─────────
-const handleJoinRoom = async () => {
-    const roomCode = prompt("입장할 로비 코드를 입력하세요:");
-    if (!roomCode || !roomCode.trim()) return;
+// 방 입장 모달 및 이벤트
+const handleOpenJoinModal = () => {
+    inputRoomCode.value = '';
+    isJoinModalOpen.value = true;
+};
 
+const confirmJoinRoom = async () => {
+    if (!inputRoomCode.value || !inputRoomCode.value.trim()) return;
+
+    const code = inputRoomCode.value.trim();
+    isJoinModalOpen.value = false;
     isLoading.value = true;
 
     try {
         const avatarUrl = await uploadAvatarIfNeeded();
-        router.visit(`/lobby/${roomCode.trim()}`, {
+        router.visit(`/lobby/${code}`, {
             data: {
                 nickname: nickname.value,
                 avatar:   avatarUrl,
@@ -341,14 +427,13 @@ const handleJoinRoom = async () => {
     }
 };
 
-// ── 기타 ───────────────────────────────────────────────
+// 디스코드 연동 및 로그아웃
 const redirectToDiscordOAuth = () => {
     window.location.href = '/auth/discord/redirect';
 };
 
-const handleLogout = () => {
-    if (confirm('로그아웃 하시겠습니까?')) {
-        router.post('/logout');
-    }
+const confirmLogout = () => {
+    isLogoutModalOpen.value = false;
+    router.post('/logout');
 };
 </script>
