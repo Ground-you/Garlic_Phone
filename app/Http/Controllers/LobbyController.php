@@ -72,59 +72,56 @@ class LobbyController extends Controller
         $isHost = $request->query('isHost', 'false') === 'true';
         $sessionId = session()->getId();
 
-        if ($isHost) {
-            $hostPlayer = LobbyPlayer::where('lobby_code', $id)
-                ->where('session_id', $sessionId)
-                ->where('is_host', true)
-                ->first();
+        // 1. 현재 세션의 플레이어 정보 먼저 조회
+        $player = LobbyPlayer::where('lobby_code', $id)
+            ->where('session_id', $sessionId)
+            ->first();
 
-            $nickname = $hostPlayer?->nickname
-                ?? $request->query('nickname')
-                ?? $request->user()?->name
-                ?? '방장';
-            $avatar = $hostPlayer?->avatar ?? '/images/profile.png';
-            $statusMessage = $hostPlayer?->status_message ?? '';
+        // 2. 아바타 기본값 정리
+        $avatarParam = $request->query('avatar', '');
+        $fallbackAvatar = (!empty($avatarParam) && !str_starts_with($avatarParam, 'blob:'))
+            ? $avatarParam
+            : '/images/profile.png';
 
-        } else {
-            $nickname = $request->query('nickname')
-                ?? $request->user()?->name
-                ?? '게스트_' . rand(100, 999);
+        $nickname = $player?->nickname
+            ?? $request->query('nickname')
+            ?? $request->user()?->name
+            ?? ($isHost ? '방장' : '멋진별명' . rand(100, 999));
 
-            $avatarParam = $request->query('avatar', '');
-            $avatar = $request->user()?->avatar_url
-                ?? ((!empty($avatarParam) && !str_starts_with($avatarParam, 'blob:'))
-                    ? $avatarParam
-                    : '/images/profile.png');
+        $avatar = $player?->avatar
+            ?? $request->user()?->avatar_url
+            ?? $fallbackAvatar;
 
-            $statusMessage = $request->query('statusMessage', ''); // ✅ 추가
+        $statusMessage = $request->query('statusMessage', $player?->status_message ?? '');
 
-            $existing = LobbyPlayer::where('lobby_code', $id)
-                ->where('session_id', $sessionId)->first();
+        // 4. DB에 없으면 신규 생성, 있으면 최신 정보로 업데이트
+        if (!$player) {
+            $player = LobbyPlayer::create([
+                'lobby_code'     => $id,
+                'nickname'       => $nickname,
+                'avatar'         => $avatar,
+                'status_message' => $statusMessage,
+                'is_host'        => $isHost,
+                'is_ready'       => false,
+                'session_id'     => $sessionId,
+            ]);
 
-            if (!$existing) {
-                LobbyPlayer::create([
-                    'lobby_code'     => $id,
-                    'nickname'       => $nickname,
-                    'avatar'         => $avatar,
-                    'status_message' => $statusMessage,
-                    'is_host'        => false,
-                    'is_ready'       => false,
-                    'session_id'     => $sessionId,
-                ]);
-
-                broadcast(new PlayerJoined(
-                    $id, $nickname, $avatar, $statusMessage, false, $sessionId
-                ));
+                if (!$isHost) {
+                    broadcast(new PlayerJoined(
+                        $id, $nickname, $avatar, $statusMessage, false, $sessionId
+                    ));
+                }
             } else {
                 // 세션이 이미 존재하더라도 한마디/프로필 데이터 최신화
-                $existing->update([
+                $player->update([
                     'nickname'       => $nickname,
                     'avatar'         => $avatar,
                     'status_message' => $statusMessage,
                 ]);
             }
-        } 
+     
 
+        // 5. 로비 내 전체 참가자 목록 조회
         $initialPlayers = LobbyPlayer::where('lobby_code', $id)
             ->orderByDesc('is_host')
             ->orderBy('created_at')
