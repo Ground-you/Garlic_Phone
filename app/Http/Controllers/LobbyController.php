@@ -94,30 +94,17 @@ class LobbyController extends Controller
 
         $statusMessage = $request->query('statusMessage', $player?->status_message ?? '');
 
-        } else {
-            $nickname = $request->query('nickname')
-                ?? $request->user()?->name
-                ?? '멋진별명' . rand(100, 999);
-
-            $avatarParam = $request->query('avatar', '');
-            $avatar = $request->user()?->avatar_url
-                ?? ((!empty($avatarParam) && !str_starts_with($avatarParam, 'blob:'))
-                    ? $avatarParam
-                    : '/images/profile.png');
-
-            $statusMessage = $request->query('statusMessage', ''); // ✅ 추가
-
-            // 4. DB에 없으면 신규 생성, 있으면 최신 정보로 업데이트
-            if (!$player) {
-                $player = LobbyPlayer::create([
-                    'lobby_code'     => $id,
-                    'nickname'       => $nickname,
-                    'avatar'         => $avatar,
-                    'status_message' => $statusMessage,
-                    'is_host'        => $isHost,
-                    'is_ready'       => false,
-                    'session_id'     => $sessionId,
-                ]);
+        // 4. DB에 없으면 신규 생성, 있으면 최신 정보로 업데이트
+        if (!$player) {
+            $player = LobbyPlayer::create([
+                'lobby_code'     => $id,
+                'nickname'       => $nickname,
+                'avatar'         => $avatar,
+                'status_message' => $statusMessage,
+                'is_host'        => $isHost,
+                'is_ready'       => false,
+                'session_id'     => $sessionId,
+            ]);
 
                 if (!$isHost) {
                     broadcast(new PlayerJoined(
@@ -132,7 +119,7 @@ class LobbyController extends Controller
                     'status_message' => $statusMessage,
                 ]);
             }
-        } 
+     
 
         // 5. 로비 내 전체 참가자 목록 조회
         $initialPlayers = LobbyPlayer::where('lobby_code', $id)
