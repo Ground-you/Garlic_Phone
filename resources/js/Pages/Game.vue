@@ -28,9 +28,38 @@
             </div>
 
             <!-- 게임 종료 화면 -->
-            <div v-if="round.finished" class="flex-1 flex flex-col items-center justify-center gap-4 text-white">
-                <p class="font-black text-2xl">🎉 모든 라운드가 끝났어요!</p>
-                <p class="font-bold text-sm opacity-80">결과 화면은 다음 단계에서 만들 예정이에요.</p>
+            <div v-if="round.finished" class="flex-1 flex flex-col items-center gap-4 text-white overflow-hidden">
+                <p class="font-black text-xl mt-2">🎉 결과 보기</p>
+
+                <div v-if="chains.length" class="w-full flex flex-col items-center gap-3 flex-1 overflow-hidden">
+                    <!-- 체인 선택 탭 -->
+                    <div class="flex gap-2 flex-wrap justify-center">
+                        <button v-for="(chain, i) in chains" :key="i"
+                            @click="activeChain = i"
+                            :class="activeChain === i ? 'bg-white text-[#42215c]' : 'bg-white/20 text-white'"
+                            class="px-4 py-1.5 rounded-full font-black text-xs transition">
+                            {{ chain.starter }}의 체인
+                        </button>
+                    </div>
+
+                    <!-- 선택된 체인의 스텝들 -->
+                    <div class="flex-1 w-full overflow-y-auto custom-scroll px-2">
+                        <div class="flex flex-col gap-3 max-w-md mx-auto">
+                            <div v-for="step in chains[activeChain].steps" :key="step.round"
+                                class="bg-[#a57cb8] border-2 border-[#703b96] rounded-2xl p-3">
+                                <p class="text-purple-200 text-[10px] font-bold mb-1">{{ step.author }} · {{ step.round + 1 }}번째</p>
+                                <p v-if="step.type === 'text'" class="text-white font-bold text-sm">{{ step.content }}</p>
+                                <img v-else :src="step.content" class="w-full rounded-xl bg-white" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button v-if="isHost" @click="returnToLobby"
+                    class="bg-[#d3aade] hover:bg-[#c39ac7] border-[3px] border-[#703b96] text-[#42215c] font-black text-base px-8 py-3 rounded-xl transition-transform active:scale-95 mb-2">
+                    대기방으로 돌아가기
+                </button>
+                <p v-else class="text-white/70 font-bold text-xs mb-2">방장이 대기방으로 이동시킬 때까지 기다려 주세요.</p>
             </div>
 
             <!-- 본문: 플레이어 목록 + 라운드 콘텐츠 -->
@@ -69,7 +98,7 @@
                     </div>
                     <template v-else>
                         <p class="text-[#42215c] font-black text-sm text-center mt-4">다음 플레이어에게 넘겨줄 주제를 선정해 보아요.</p>
-                        <p class="text-[#6b3f80] font-bold text-xs text-center mb-4">EX) 산타를 하는 루돌프</p>
+                        <p class="text-[#6b3f80] font-bold text-xs text-center mb-4">EX) 산타를 타는 루돌프</p>
                     </template>
 
                     <textarea

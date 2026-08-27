@@ -164,4 +164,61 @@ class GameController extends Controller
             ->where('round', $round - 1)
             ->first();
     }
+
+    // GET /game/{code}/results — 게임 종료 후 결과 확인
+    public function results(Request $request, string $code)
+    {
+        $players = LobbyPlayer::where('lobby_code', $code)
+            ->orderByDesc('is_host')->orderBy('created_at')
+            ->get(['nickname', 'avatar', 'session_id'])
+            ->toArray();
+
+        $state = GameState::where('lobby_code', $code)->firstOrFail();
+        $totalPlayers = count($players);
+
+        $chains = [];
+        for ($s = 0; $s < $totalPlayers; $s++) {
+            $chain = [];
+            for ($r = 0; $r < $state->total_rounds; $r++) {
+                $authorIndex = ($s + $r) % $totalPlayers;
+                $author = $players[$authorIndex];
+
+             $submission = GameSubmission::where('lobby_code', $code)
+                    ->where('session_id', $author['session_id'])
+                    ->where('round', $r)
+                    ->first();
+
+                $chain[] = [
+                    'round'    => $r,
+                    'type'     => $r % 2 === 0 ? 'text' : 'drawing',
+                    'content'  => $submission?->content,
+                    'author'   => $author['nickname'],
+                    'avatar'   => $author['avatar'],
+                ];
+            }
+            $chains[] = [
+                'starter' => $players[$s]['nickname'],
+                'steps'   => $chain,
+            ];
+        }
+
+        return response()->json(['chains' => $chains]);
+    }
+
+    // POST /game/{code}/return-to-lobby — 게임 종료 후 로비로 돌아가기
+    public function returnToLobby(Request $request, string $code)
+    {
+        // 게임 관련 데이터 정리
+        GameSubmission::where('lobby_code', $code)->delete();
+        GameState::where('lobby_code', $code)->delete();
+
+        // 준비 상태 초기화 (방장은 계속 준비 상태 유지)
+        LobbyPlayer::where('lobby_code', $code)
+            ->where('is_host', false)
+            ->update(['is_ready' => false]);
+
+        broadcast(new \App\Events\GameEnded($code))->toOthers();
+
+        return response()->json(['ok' => true]);
+    }
 }
