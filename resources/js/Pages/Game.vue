@@ -161,6 +161,20 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { Head } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
+
+const chains = ref([]);
+const activeChain = ref(0);
+
+const fetchResults = async () => {
+    const res = await window.axios.get(`/game/${props.lobbyCode}/results`);
+    chains.value = res.data.chains;
+};
+
+const returnToLobby = async () => {
+    await window.axios.post(`/game/${props.lobbyCode}/return-to-lobby`);
+    router.visit(`/lobby/${props.lobbyCode}?isHost=true`);
+};
 
 const props = defineProps({
     lobbyCode:   { type: String, required: true },
@@ -267,6 +281,9 @@ const refreshRound = async () => {
         await nextTick();
         initCanvas();
     }
+    if (res.data.finished) {
+        await fetchResults(); // 게임 종료 후 결과를 가져옴(GameController의 109번째 줄)
+    }
 };
 
 // ── 제출 ──
@@ -313,6 +330,9 @@ onMounted(() => {
         .listen('.round.advanced', () => {
             refreshRound();
         });
+        .listen('.game.ended', () => {
+            router.visit(`/lobby/${props.lobbyCode}`);
+        })
 });
 
 onUnmounted(() => {
