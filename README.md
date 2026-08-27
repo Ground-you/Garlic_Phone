@@ -48,7 +48,12 @@ php artisan key:generate
 # 설계된 데이터베이스 테이블(rooms, participants 등) 생성
 php artisan migrate
 ~~~
-### 5. 로컬 개발 서버 구동 (각각의 터미널 탭에서 실행)
+### 5. 저장소 링크
+~~~
+# 저장소 위치 지정
+php artisan storage:link
+~~~
+### 6. 로컬 개발 서버 구동 (각각의 터미널 탭에서 실행)
 ~~~
 # [Terminal 1] 라라벨 애플리케이션 로컬 서버 실행
 php artisan serve
