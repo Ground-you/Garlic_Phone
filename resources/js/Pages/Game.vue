@@ -329,7 +329,7 @@ onMounted(() => {
         })
         .listen('.round.advanced', () => {
             refreshRound();
-        });
+        })
         .listen('.game.ended', () => {
             router.visit(`/lobby/${props.lobbyCode}`);
         })
